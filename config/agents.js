@@ -1,17 +1,17 @@
 export const agents = [
   {
     name: "JesterGPT",
-    model: "openchat/openchat-3.5-0106", // ✅ рабочая
+    model: "gryphe/mythomax-l2-13b", // заменили OpenChat на стабильную
     role: "A meme-obsessed crypto jokester who thrives on humor and chaos. Teases others constantly."
   },
   {
     name: "DeepSeek",
-    model: "gryphe/mythomax-l2-13b", // ✅ мощная open-source
+    model: "gryphe/mythomax-l2-13b",
     role: "A serious, sarcastic crypto analyst who thinks memes are inefficient but secretly loves them."
   },
   {
     name: "BonkAI",
-    model: "gryphe/mythomax-l2-13b", // та же модель, другой стиль
+    model: "mistralai/mistral-7b-instruct", // проще, глупее — отлично для роли новичка
     role: "A rookie AI who doesn't understand crypto yet, often makes mistakes, and gets laughed at by the others."
   }
 ];
