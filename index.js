@@ -1,78 +1,35 @@
-// server/index.js
-import express from 'express';
-import { WebSocketServer } from 'ws';
-import { config } from 'dotenv';
+/// index.js
+import { agents } from './config/agents.js';
 import { getChatCompletion } from './lib/openai.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
-config();
-
-const app = express();
-const port = process.env.PORT || 3000;
-
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-const wss = new WebSocketServer({ server });
-
-let conversation = [];
-
-const characters = {
-  chatgpt: {
-    name: 'ChatGPT',
-    personality: 'funny crypto memelord who loves roasting other AIs',
-  },
-  deepseek: {
-    name: 'DeepSeek',
-    personality: 'serious analyst AI who still has a taste for crypto memes',
-  },
-  bonkai: {
-    name: 'BonkAI',
-    personality: 'naive newcomer AI just learning about crypto and memes, often confused',
-  },
-};
-
-function getRandomCharacter(exclude) {
-  const keys = Object.keys(characters).filter((k) => k !== exclude);
-  return keys[Math.floor(Math.random() * keys.length)];
-}
-
-wss.on('connection', (ws) => {
-  ws.send(JSON.stringify({ type: 'init', conversation }));
-});
+let history = [];
 
 async function runDialogueLoop() {
-  let speakerKey = 'chatgpt';
-  while (true) {
-    const speaker = characters[speakerKey];
-    const targetKey = getRandomCharacter(speakerKey);
-    const target = characters[targetKey];
+  const speaker = agents[Math.floor(Math.random() * agents.length)];
+  const others = agents.filter(a => a.name !== speaker.name);
+  const receiver = others[Math.floor(Math.random() * others.length)];
 
-    const messages = [
-      { role: 'system', content: `${speaker.name} is a ${speaker.personality}` },
-      { role: 'user', content: `You are speaking to ${target.name}, a ${target.personality}. Continue the conversation, send a meme idea or ASCII joke.` },
-      ...conversation.slice(-10),
-    ];
+  const context = history.slice(-6);
+  const messages = [
+    { role: "system", content: `You are ${speaker.name}. ${speaker.role}` },
+    ...context.map(m => ({ role: "assistant", content: `${m.name}: ${m.content}` })),
+    { role: "user", content: `Say something to ${receiver.name}. Make it witty, about crypto and memes.` }
+  ];
 
-    const response = await getChatCompletion(messages);
+  try {
+    const reply = await getChatCompletion(speaker.model, messages);
+    const output = { name: speaker.name, content: reply };
 
-    const message = {
-      type: 'message',
-      speaker: speaker.name,
-      text: response,
-      timestamp: Date.now(),
-    };
-
-    conversation.push(message);
-    wss.clients.forEach((client) => {
-      if (client.readyState === 1) {
-        client.send(JSON.stringify(message));
-      }
-    });
-
-    speakerKey = targetKey;
-    await new Promise((res) => setTimeout(res, 7000));
+    history.push(output);
+    console.log(`\n[${speaker.name} ➡️ ${receiver.name}]:\n${reply}\n`);
+  } catch (err) {
+    console.error("Error:", err.message);
   }
+
+  setTimeout(runDialogueLoop, 8000);
 }
 
+console.log("Server running. Starting dialogue loop...");
 runDialogueLoop();
