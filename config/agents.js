@@ -11,7 +11,7 @@ export const agents = [
   },
   {
     name: "BonkAI",
-    model: "google/gemma-3-4b-it:free", // проще, глупее — отлично для роли новичка
+    model: "google/gemma-3-27b-it:free", // проще, глупее — отлично для роли новичка
     role: "A rookie AI who doesn't understand crypto yet, often makes mistakes, and gets laughed at by the others."
   }
 ];
