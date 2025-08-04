@@ -1,40 +1,16 @@
 body {
   margin: 0;
-  background-color: #171718;
+  background-color: #0a0a0a;
   color: #ffa500;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'DejaVu Sans Mono', Consolas, 'Courier New', monospace;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  position: relative;
+  perspective: 500px;
   overflow: hidden;
 }
 
-/* Добавляем текстуру старого телевизора */
-body::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-      rgba(255, 255, 255, 0.02) 50%,
-      rgba(255, 255, 255, 0.01) 50%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.01) 50%,
-      transparent 50%
-    );
-  background-size: 4px 4px, 4px 4px;
-  opacity: 0.3;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Эффект фишай и CRT-искажения */
 #terminal {
   width: 90%;
   height: 90%;
@@ -43,46 +19,67 @@ body::before {
   flex-direction: column;
   justify-content: flex-end;
   background-color: #171717;
-  border-radius: 12px; /* Увеличиваем радиус для эффекта CRT */
-  box-shadow: 0 0 15px #ff8c00, inset 0 0 5px #ff8c00;
-  transform: scale(1.02) perspective(1000px) rotateX(2deg) rotateY(-1deg);
-  filter: url(#fisheye) brightness(1.1) contrast(1.2);
-  position: relative;
-  z-index: 2;
+  border-radius: 12px;
+  box-shadow: 
+    0 0 15px #ff8c00,
+    inset 0 0 20px rgba(0, 0, 0, 0.7);
+  transform: rotateX(8deg) rotateY(-3deg);
   overflow: hidden;
+  position: relative;
+  filter: url(#crt-effect);
+  animation: flicker 0.15s infinite;
 }
 
-/* Добавляем сканлайны */
-#terminal::after {
-  content: '';
+#terminal::before {
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.1) 2px,
-    rgba(0, 0, 0, 0.1) 4px
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 100% 3px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+#terminal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,0) 60%,
+    rgba(0,0,0,0.8) 100%
   );
   pointer-events: none;
-  z-index: 3;
+  z-index: 21;
 }
 
 #output {
   flex-grow: 1;
   overflow-y: auto;
   white-space: pre-wrap;
-  filter: blur(0.3px) contrast(1.2);
   text-shadow: 0 0 4px #ff9900;
+  position: relative;
+  z-index: 10;
+  filter: blur(0.4px);
 }
 
 #input-area {
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative;
+  z-index: 10;
 }
 
 #user-input {
@@ -93,6 +90,7 @@ body::before {
   border-bottom: 1px solid #ffa500;
   font-size: 16px;
   outline: none;
+  text-shadow: 0 0 3px #ff9900;
 }
 
 #send-btn {
@@ -101,6 +99,7 @@ body::before {
   border: 1px solid #ffa500;
   cursor: pointer;
   padding: 4px 12px;
+  text-shadow: 0 0 3px #ff9900;
 }
 
 #send-btn:disabled {
@@ -111,6 +110,7 @@ body::before {
 #cooldown {
   font-size: 12px;
   color: #ffcc70;
+  text-shadow: 0 0 2px #ff9900;
 }
 
 .cursor {
@@ -118,15 +118,33 @@ body::before {
   animation: blink 1s step-start infinite;
   color: #ff9900;
   margin-left: 1px;
+  text-shadow: 0 0 5px #ff6600;
 }
 
 @keyframes blink {
   50% { opacity: 0; }
 }
 
-/* SVG-фильтр для эффекта фишай */
-svg {
-  position: absolute;
-  width: 0;
-  height: 0;
+@keyframes flicker {
+  0% { opacity: 0.95; }
+  5% { opacity: 0.9; }
+  10% { opacity: 0.99; }
+  15% { opacity: 0.97; }
+  20% { opacity: 0.93; }
+  25% { opacity: 0.94; }
+  30% { opacity: 0.89; }
+  35% { opacity: 0.92; }
+  40% { opacity: 0.98; }
+  45% { opacity: 0.91; }
+  50% { opacity: 0.88; }
+  55% { opacity: 0.93; }
+  60% { opacity: 0.96; }
+  65% { opacity: 0.90; }
+  70% { opacity: 0.94; }
+  75% { opacity: 0.99; }
+  80% { opacity: 0.92; }
+  85% { opacity: 0.97; }
+  90% { opacity: 0.89; }
+  95% { opacity: 0.91; }
+  100% { opacity: 0.95; }
 }

@@ -7,22 +7,32 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <svg>
-    <filter id="fisheye">
-      <feComponentTransfer>
-        <feFuncR type="table" tableValues="0 0.1 0.3 0.6 1"/>
-        <feFuncG type="table" tableValues="0 0.1 0.3 0.6 1"/>
-        <feFuncB type="table" tableValues="0 0.1 0.3 0.6 1"/>
-      </feComponentTransfer>
-    </filter>
+  <!-- SVG фильтры для CRT эффектов -->
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="0" height="0">
+    <defs>
+      <filter id="crt-effect">
+        <!-- Эффект фишая (выпуклый экран) -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.02 0.05" numOctaves="1" result="warp"/>
+        <feDisplacementMap in="SourceGraphic" in2="warp" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+        
+        <!-- Горизонтальные искажения -->
+        <feTurbulence type="turbulence" baseFrequency="0.01 0.1" numOctaves="2" result="turbulence"/>
+        <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+        
+        <!-- Свечение текста -->
+        <feGaussianBlur stdDeviation="0.7" result="glow"/>
+        <feComposite in="SourceGraphic" in2="glow" operator="over"/>
+      </filter>
+    </defs>
   </svg>
-  <div id="terminal" role="main" aria-label="Crypto Terminal">
-    <pre id="output" aria-live="polite"></pre>
+
+  <div id="terminal">
+    <pre id="output"></pre>
     <div id="input-area">
-      <span aria-hidden="true">&gt;</span>
-      <input id="user-input" placeholder="Type..." maxlength="200" aria-label="Enter your message">
-      <button id="send-btn" aria-label="Send message">Send</button>
-      <span id="cooldown" aria-live="polite"></span>
+      <span>&gt;</span>
+      <input id="user-input" placeholder="Type..." maxlength="200">
+      <button id="send-btn">Send</button>
+      <span id="cooldown"></span>
     </div>
   </div>
   <script src="script.js"></script>
