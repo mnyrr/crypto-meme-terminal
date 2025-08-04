@@ -62,7 +62,7 @@ function typewriterEffect(text) {
       clearInterval(interval);
       cursor.remove();
     }
-  }, 10);
+  }, 30);
 }
 
 const es = new EventSource('/stream');
