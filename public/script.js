@@ -10,7 +10,7 @@ if (!userId) {
   localStorage.setItem('terminalUserId', userId);
 }
 
-// Создаем поле ввода внутри output
+// Создаем поле ввода
 const inputLine = document.createElement('div');
 inputLine.className = 'input-line';
 inputLine.innerHTML = `
@@ -27,21 +27,52 @@ hiddenInput.type = 'text';
 hiddenInput.className = 'hidden-input';
 document.body.appendChild(hiddenInput);
 
-// Прокрутка вниз при необходимости
-function maybeScrollToBottom() {
-  if (shouldAutoScroll) {
+// Автофокус при загрузке
+window.onload = () => hiddenInput.focus();
+
+// Повторный фокус при возврате на вкладку
+window.addEventListener('focus', () => {
+  hiddenInput.focus();
+});
+
+// Если пользователь кликает по терминалу — тоже фокусим
+outputContainer.addEventListener('click', () => {
+  hiddenInput.focus();
+});
+
+// Проверка, видим ли inputLine
+function isInputVisible() {
+  const rect = inputLine.getBoundingClientRect();
+  return (
+    rect.bottom <= window.innerHeight &&
+    rect.top >= 0
+  );
+}
+
+// Прокрутка вниз, если нужно
+function maybeScrollToBottom(force = false) {
+  if (force || shouldAutoScroll) {
     outputContainer.scrollTop = outputContainer.scrollHeight;
   }
 }
 
-// Отслеживаем ручную прокрутку
+// Следим за ручной прокруткой
 outputContainer.addEventListener('scroll', () => {
   const { scrollTop, scrollHeight, clientHeight } = outputContainer;
   shouldAutoScroll = scrollHeight - scrollTop <= clientHeight + 5;
 });
 
-hiddenInput.addEventListener('input', updateInputDisplay);
-hiddenInput.addEventListener("keydown", e => {
+hiddenInput.addEventListener('input', () => {
+  updateInputDisplay();
+  if (!isInputVisible()) {
+    maybeScrollToBottom(true); // Принудительно скроллим, если поле не видно
+  }
+});
+
+hiddenInput.addEventListener('keydown', e => {
+  if (!isInputVisible()) {
+    maybeScrollToBottom(true);
+  }
   if (e.key === "Enter") sendMessage();
 });
 
@@ -53,11 +84,11 @@ function updateInputDisplay() {
 function sendMessage() {
   const msg = hiddenInput.value.trim();
   if (!msg) return;
-  
+
   const line = document.createElement('div');
   line.textContent = `[${userId}]: ${msg}`;
   output.insertBefore(line, inputLine);
-  
+
   hiddenInput.value = '';
   updateInputDisplay();
   maybeScrollToBottom();
@@ -72,9 +103,9 @@ function sendMessage() {
 function typewriterEffect(data) {
   const line = document.createElement('div');
   output.insertBefore(line, inputLine);
-  
+
   const [namePart, ...messageParts] = data.split("]: ");
-  const name = namePart + "]"; 
+  const name = namePart + "]";
   const message = messageParts.join("]: ");
 
   line.textContent = name + ": ";
@@ -102,5 +133,3 @@ es.onmessage = e => {
     typewriterEffect(e.data);
   }
 };
-
-window.onload = () => hiddenInput.focus();
