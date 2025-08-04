@@ -186,7 +186,41 @@ a:hover {
 }
 
 /* Стили для кнопок */
-.terminal-button, .back-button {
+.output-container {
+  display: flex;
+  justify-content: center;
+  align-items: center top;
+  overflow: hidden;
+  padding-top: 10rem;
+}
+#output > h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center top;
+  overflow: hidden;
+  font-size: 26px;
+  border: 0.5rem double;
+  padding: 0.7rem;
+}
+#output > p {
+  font-size: 18px;
+}
+.terminal-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  color: #EA9806;
+  background-color: transparent;
+  border: transparent;
+  font-family: 'VT323', monospace;
+  font-size: 26px;
+  text-decoration: none;
+  text-shadow: 0 0.2rem 1rem #5F3A00;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.back-button {
   display: inline-block;
   padding: 0.3rem 0.9rem;
   color: #EA9806;
