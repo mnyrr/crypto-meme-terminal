@@ -78,7 +78,8 @@ body {
   z-index: 1;
 }
 #output {
-  min-height: 100%;
+  max-height: calc(100% - 10rem);
+  min-height: 0%;
   display: flex;
   flex-direction: column;
   font-family: 'VT323', monospace;
