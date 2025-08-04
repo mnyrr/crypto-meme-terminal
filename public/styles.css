@@ -49,7 +49,10 @@ body {
 .output-container {
   height: 100%;
   overflow: auto;
-  padding: 5rem 5rem;
+  padding-top: 6rem;
+  padding-bottom: 5rem;
+  padding-left: 3rem;
+  padding-right: 30rem;
   background-color: #432600;
   position: absolute;
   top: 0;
@@ -62,8 +65,8 @@ body {
   display: flex;
   flex-direction: column;
   font-family: 'VT323', monospace;
-  font-size: 24px;
-  line-height: 1.2;
+  font-size: 22px;
+  line-height: 1.1;
   text-shadow: 0 0.2rem 1rem #5F3A00;
   white-space: pre-wrap;
 }
