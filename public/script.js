@@ -2,16 +2,25 @@ const input = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
 const output = document.getElementById('output');
 const cooldown = document.getElementById('cooldown');
+
 let isCooldown = false;
 
-sendBtn.onclick = () => {
-  if (isCooldown || !input.value.trim()) return;
+sendBtn.onclick = sendMessage;
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
+
+function sendMessage() {
   const msg = input.value.trim();
+  if (!msg || isCooldown) return;
   input.value = '';
-  output.innerText += `> You: ${msg}\n`;
-  fetch('/user', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({message: msg}) });
   startCooldown(30);
-};
+  fetch('/user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: msg })
+  });
+}
 
 function startCooldown(sec) {
   isCooldown = true;
@@ -28,8 +37,27 @@ function startCooldown(sec) {
   }, 1000);
 }
 
+function typewriterEffect(text) {
+  let i = 0;
+  const cursor = document.createElement("span");
+  cursor.className = "cursor";
+  cursor.innerText = "▋";
+  output.appendChild(cursor);
+
+  const interval = setInterval(() => {
+    if (i < text.length) {
+      output.insertBefore(document.createTextNode(text[i]), cursor);
+      output.scrollTop = output.scrollHeight;
+      i++;
+    } else {
+      clearInterval(interval);
+      cursor.remove();
+    }
+  }, 20);
+}
+
+// SSE
 const es = new EventSource('/stream');
 es.onmessage = e => {
-  output.innerText += `${e.data}\n`;
-  output.scrollTop = output.scrollHeight;
+  typewriterEffect(e.data + "\n");
 };

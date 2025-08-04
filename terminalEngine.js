@@ -4,10 +4,8 @@ import { generateMemeCoin } from './memeGenerator.js';
 
 let history = [];
 let lastSpeaker = null;
-const MAX_TOKENS = 50;
 const DURATION = 15 * 60 * 1000;
 const START = Date.now();
-
 const userQueue = [];
 
 export function addUserMessage(text) {
@@ -40,25 +38,30 @@ async function handleAIReply() {
   lastSpeaker = speaker.name;
   const promptMsg = history.length === 0
     ? "Start with a witty crypto meme or joke."
-    : `Reply to ${history[history.length-1].name}: "${history[history.length-1].content}" wit & short (max 50 tokens).`;
+    : `Reply to ${history[history.length-1].name}: "${history[history.length-1].content}" short & witty (max 50 tokens).`;
 
   const messages = [
-    { role: "system", content: speaker.role + `. Short, max ${MAX_TOKENS} tokens.` },
+    { role: "system", content: speaker.role + `. Short, max 50 tokens.` },
     ...buildContext(),
     { role: "user", content: promptMsg }
   ];
 
-  const reply = await getChatCompletion(speaker.model, messages);
-  const content = reply.trim();
-  history.push({ name: speaker.name, content });
-  broadcast(`[${speaker.name}]: ${content}`);
+  try {
+    const reply = await getChatCompletion(speaker.model, messages);
+    const content = reply.trim();
+    history.push({ name: speaker.name, content });
+    broadcast(`[${speaker.name}]: ${content}`);
+  } catch (err) {
+    console.error(`⚠️ OpenRouter error: ${err.message}`);
+    // просто пропускаем шаг
+  }
 }
 
 async function handleUserQueue() {
   if (userQueue.length > 0) {
     const msg = userQueue.shift();
     history.push(msg);
-    broadcast(`> You: ${msg.content}`);
+    // не дублируем здесь — вывод обрабатывается на клиенте
   }
 }
 
@@ -74,6 +77,6 @@ export async function runEngine() {
     }
     await handleUserQueue();
     await handleAIReply();
-    await new Promise(r => setTimeout(r, 10000));
+    await new Promise(r => setTimeout(r, 20000)); // ⏱ увеличено до 20 сек
   }
 }

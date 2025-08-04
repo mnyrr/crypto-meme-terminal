@@ -8,14 +8,17 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
-const listeners = [];
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 app.post('/user', (req, res) => {
-  addUserMessage(req.body.message);
-  res.sendStatus(200);
+  if (typeof req.body.message === 'string' && req.body.message.trim()) {
+    addUserMessage(req.body.message.trim());
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(400);
+  }
 });
 
 app.get('/stream', (req, res) => {
@@ -26,6 +29,10 @@ app.get('/stream', (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log('Server running');
-  runEngine();
+  console.log('✅ Server running');
+  try {
+    runEngine();
+  } catch (err) {
+    console.error('❌ Failed to run engine', err);
+  }
 });
