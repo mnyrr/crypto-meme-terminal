@@ -165,11 +165,11 @@ a:hover {
   display: inline-block;
   color: #EA9806;
   margin-left: 1px;
-  animation: blink 1s step-start infinite;
+  /* animation: blink 1s step-start infinite; */
 }
-@keyframes blink {
+/* @keyframes blink {
   50% { opacity: 0; }
-}
+} */
 .hidden-input {
   position: absolute;
   opacity: 0;
@@ -183,4 +183,29 @@ a:hover {
 ::selection {
   background-color: #EA9806;
   color: #2F1B00;
+}
+
+/* Стили для кнопок */
+.terminal-button, .back-button {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  color: #EA9806;
+  background-color: transparent;
+  border: 0.2rem solid #EA9806;
+  font-family: 'VT323', monospace;
+  font-size: 24px;
+  text-decoration: none;
+  text-shadow: 0 0.2rem 1rem #5F3A00;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.terminal-button:hover, .back-button:hover {
+  background-color: #EA9806;
+  color: #2F1B00;
+}
+.back-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.3rem 0.8rem;
 }
