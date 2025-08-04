@@ -48,11 +48,12 @@ function startCooldown(sec) {
 
 function typewriterEffect(data) {
   // Разделяем данные на имя и текст сообщения
-  const [name, ...messageParts] = data.split(":\n");
-  const message = messageParts.join(":\n");
+  const [namePart, ...messageParts] = data.split("]: ");
+  const name = namePart + "]"; // Включаем скобки
+  const message = messageParts.join("]: ") + "\n"; // Добавляем перенос строки
 
   // Мгновенно добавляем имя
-  const nameNode = document.createTextNode(name + ":\n");
+  const nameNode = document.createTextNode(name + ": ");
   output.appendChild(nameNode);
 
   // Добавляем курсор для эффекта печатания
@@ -70,7 +71,7 @@ function typewriterEffect(data) {
     } else {
       clearInterval(interval);
       cursor.remove();
-      output.appendChild(document.createTextNode("\n")); // Добавляем перенос строки после сообщения
+      output.appendChild(document.createTextNode("\n")); // Добавляем дополнительный перенос
     }
   }, 30);
 }

@@ -41,7 +41,7 @@ async function handleAIReply() {
     : `Reply to ${history[history.length-1].name}: "${history[history.length-1].content}" short & witty (max 50 tokens).`;
 
   const messages = [
-    { role: "system", content: speaker.role + `. Short, max 50 tokens.` },
+    { role: "system", content: `${speaker.role}. Short, max 50 tokens.` },
     ...buildContext(),
     { role: "user", content: promptMsg }
   ];
@@ -61,7 +61,7 @@ async function handleUserQueue() {
   if (userQueue.length > 0) {
     const msg = userQueue.shift();
     history.push(msg);
-    // не дублируем здесь — вывод обрабатывается на клиенте
+    broadcast(`[${msg.name}]: ${msg.content}`);
   }
 }
 
@@ -77,6 +77,6 @@ export async function runEngine() {
     }
     await handleUserQueue();
     await handleAIReply();
-    await new Promise(r => setTimeout(r, 20000)); // ⏱ увеличено до 20 сек
+    await new Promise(r => setTimeout(r, 20000)); // ⏱ 20 сек
   }
 }
