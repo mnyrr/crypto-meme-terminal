@@ -186,13 +186,13 @@ a:hover {
 }
 
 /* Стили для кнопок */
-/* .output-container {
+.output-container_main {
   display: flex;
   justify-content: center;
   align-items: center top;
   overflow: hidden;
   padding-top: 10rem;
-} */
+}
 #output > h1 {
   display: flex;
   justify-content: center;
