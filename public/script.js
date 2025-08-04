@@ -21,6 +21,10 @@ function sendMessage() {
   input.value = '';
   startCooldown(30);
 
+  // Мгновенно отображаем сообщение пользователя на клиенте
+  typewriterEffect(`[${userId}]: ${msg}\n`);
+
+  // Отправляем сообщение на сервер для сохранения в истории
   fetch('/user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -75,5 +79,8 @@ function typewriterEffect(data) {
 
 const es = new EventSource('/stream');
 es.onmessage = e => {
-  typewriterEffect(e.data);
+  // Пропускаем сообщения пользователя, чтобы избежать дублирования
+  if (!e.data.startsWith(`[${userId}]`)) {
+    typewriterEffect(e.data);
+  }
 };
