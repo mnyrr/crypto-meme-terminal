@@ -192,6 +192,19 @@ a:hover {
   align-items: center top;
   overflow: hidden;
   padding-top: 10rem;
+  height: 100%;
+  overflow: auto;
+  padding: 5rem 5rem;
+  background-color: #432600;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1;
+}
+/* Анимация мерцания экрана */
+.output-container_main {
+  animation: crt-output 0.1s infinite;
 }
 #output > h1 {
   display: flex;
