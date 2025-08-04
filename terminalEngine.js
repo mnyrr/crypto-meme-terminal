@@ -8,15 +8,18 @@ const DURATION = 15 * 60 * 1000;
 let conversationStart = Date.now();
 
 const userQueue = [];
+const listeners = [];
 
 export function addUserMessage(sender, content) {
-  userQueue.push({ name: sender, content });
+  const message = { name: sender, content };
+  history.push(message);
+  broadcast(`[${sender}]: ${content}`); // Добавлено: сразу транслируем сообщение
+  userQueue.push(message);
 }
 
 export function subscribeToMessages(send) {
   listeners.push(send);
 }
-const listeners = [];
 
 function broadcast(msg) {
   listeners.forEach(f => f(msg));
@@ -54,14 +57,13 @@ async function handleAIReply() {
     broadcast(`[${speaker.name}]: ${content}`);
   } catch (err) {
     console.error(`⚠️ OpenRouter error: ${err.message}`);
-    // просто пропускаем шаг
   }
 }
 
 async function handleUserQueue() {
   if (userQueue.length > 0) {
     const msg = userQueue.shift();
-    history.push(msg); // Сохраняем в истории, но не отправляем через broadcast
+    // Сообщение уже добавлено в историю и отправлено в addUserMessage
   }
 }
 
@@ -77,6 +79,6 @@ export async function runEngine() {
     }
     await handleUserQueue();
     await handleAIReply();
-    await new Promise(r => setTimeout(r, 20000)); // ⏱ 20 сек
+    await new Promise(r => setTimeout(r, 20000));
   }
 }
