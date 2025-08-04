@@ -5,7 +5,7 @@ import { generateMemeCoin } from './memeGenerator.js';
 let history = [];
 let lastSpeaker = null;
 const DURATION = 15 * 60 * 1000;
-const START = Date.now();
+let conversationStart = Date.now(); // Исправлено: локальная переменная для каждого цикла
 const userQueue = [];
 
 export function addUserMessage(sender, content) {
@@ -61,19 +61,19 @@ async function handleUserQueue() {
   if (userQueue.length > 0) {
     const msg = userQueue.shift();
     history.push(msg);
-    broadcast(`[${msg.name}]: ${msg.content}`);
+    broadcast(`[${msg.name}]: ${msg.content}`); // Отправляем сообщение пользователя
   }
 }
 
 export async function runEngine() {
   while (true) {
     const now = Date.now();
-    if (now - START >= DURATION) {
+    if (now - conversationStart >= DURATION) {
       const result = await generateMemeCoin(history);
       broadcast(`🎉 [FINAL MEME COIN]:\n${result}`);
       history = [];
       lastSpeaker = null;
-      break;
+      conversationStart = Date.now(); // Сбрасываем время для нового цикла
     }
     await handleUserQueue();
     await handleAIReply();

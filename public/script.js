@@ -21,9 +21,6 @@ function sendMessage() {
   input.value = '';
   startCooldown(30);
 
-  // отображаем в терминале сразу
-  typewriterEffect(`[${userId}]: ${msg}\n`);
-
   fetch('/user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
