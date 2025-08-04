@@ -154,7 +154,6 @@ a:hover {
 .input-line {
   display: flex;
   align-items: center;
-  /* margin-top: 0.5rem; */
 }
 .prompt {
   color: #EA9806;

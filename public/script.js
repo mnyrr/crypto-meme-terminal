@@ -113,8 +113,13 @@ function typewriterEffect(data) {
   const name = namePart + "]";
   const message = messageParts.join("]: ");
 
+  // Скрываем input-line
+  inputLine.style.display = 'none';
+
+  // Добавляем имя
   line.textContent = name + ": ";
 
+  // Курсор для эффекта
   const cursor = document.createElement("span");
   cursor.className = "typing-cursor";
   cursor.innerText = "▋";
@@ -124,11 +129,15 @@ function typewriterEffect(data) {
   const interval = setInterval(() => {
     if (i < message.length) {
       line.insertBefore(document.createTextNode(message[i]), cursor);
-      scrollToInputIfNeeded();
+      output.scrollTop = output.scrollHeight;
       i++;
     } else {
       clearInterval(interval);
       cursor.remove();
+
+      // Возвращаем input-line после окончания
+      inputLine.style.display = 'flex'; // flex для корректного отображения
+      scrollInputIntoView();
     }
   }, 30);
 }
