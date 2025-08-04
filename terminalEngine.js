@@ -1,11 +1,13 @@
 import { agents } from './config/agents.js';
 import { getChatCompletion } from './lib/openai.js';
 import { generateMemeCoin } from './memeGenerator.js';
+import fs from 'fs';
+import path from 'path';
 
 let history = [];
 let lastSpeaker = null;
-const DURATION = 15 * 60 * 1000;
-let conversationStart = Date.now();
+let dialogCount = 0;
+const MAX_MESSAGES = 50; // Maximum 50 messages per dialog
 
 const userQueue = [];
 const listeners = [];
@@ -13,7 +15,7 @@ const listeners = [];
 export function addUserMessage(sender, content) {
   const message = { name: sender, content };
   history.push(message);
-  broadcast(`[${sender}]: ${content}`); // Добавлено: сразу транслируем сообщение
+  broadcast(`[${sender}]: ${content}`);
   userQueue.push(message);
 }
 
@@ -26,8 +28,8 @@ function broadcast(msg) {
 }
 
 function pickNextSpeaker() {
-  const c = agents.filter(a => a.name !== lastSpeaker);
-  return c[Math.floor(Math.random() * c.length)];
+  const candidates = agents.filter(a => a.name !== lastSpeaker);
+  return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 function buildContext() {
@@ -42,10 +44,10 @@ async function handleAIReply() {
   lastSpeaker = speaker.name;
   const promptMsg = history.length === 0
     ? "Start with a witty crypto meme or joke."
-    : `Reply to ${history[history.length-1].name}: "${history[history.length-1].content}" short & witty (max 50 tokens).`;
+    : `Reply to ${history[history.length - 1].name}: "${history[history.length - 1].content}"`;
 
   const messages = [
-    { role: "system", content: `${speaker.role}. Short, max 50 tokens.` },
+    { role: "system", content: speaker.role },
     ...buildContext(),
     { role: "user", content: promptMsg }
   ];
@@ -55,6 +57,10 @@ async function handleAIReply() {
     const content = reply.trim();
     history.push({ name: speaker.name, content });
     broadcast(`[${speaker.name}]: ${content}`);
+
+    if (shouldEndDialog()) {
+      await endDialog();
+    }
   } catch (err) {
     console.error(`⚠️ OpenRouter error: ${err.message}`);
   }
@@ -62,23 +68,103 @@ async function handleAIReply() {
 
 async function handleUserQueue() {
   if (userQueue.length > 0) {
-    const msg = userQueue.shift();
-    // Сообщение уже добавлено в историю и отправлено в addUserMessage
+    userQueue.shift(); // Message already in history
   }
+}
+
+function shouldEndDialog() {
+  // End if too many messages or meme coin is created
+  return history.length >= MAX_MESSAGES || 
+         history.some(m => m.content.toLowerCase().includes("meme coin created"));
+}
+
+async function endDialog() {
+  const now = new Date();
+  const dateStr = now.toISOString().replace(/:/g, '-').slice(0, 19);
+  const dialogId = String(dialogCount++).padStart(3, '0');
+  let fileName = `dialog_${dialogId}_${dateStr}.txt`;
+  let memeCoin = null;
+
+  if (history.some(m => m.content.toLowerCase().includes("meme coin created"))) {
+    memeCoin = await generateMemeCoin(history);
+    if (memeCoin) {
+      fileName = `dialog_${dialogId}_${dateStr}_${memeCoin.ticker}.txt`;
+      // Send the meme coin summary to the dialogue before ending
+      broadcast(`🎉 [FINAL MEME COIN]:\n${formatMemeCoin(memeCoin)}`);
+    }
+  } else {
+    broadcast(`
++-------------------------------------------+
+|          [DIALOG ENDED]                   |
+|          Dialog ended                     |
+|          ${now.toLocaleString()}          |
++-------------------------------------------+
+    `);
+  }
+
+  // Save dialog to file
+  const dialogContent = history.map(m => `[${m.name}]: ${m.content}`).join('\n');
+  fs.mkdirSync(path.join(__dirname, 'dialogs'), { recursive: true });
+  fs.writeFileSync(path.join(__dirname, 'dialogs', fileName), dialogContent);
+
+  // Reset for new dialog
+  history = [];
+  lastSpeaker = null;
+}
+
+function progressBar(percentage) {
+  const totalBars = 20;
+  const filled = Math.round((percentage / 100) * totalBars);
+  const empty = totalBars - filled;
+  return '[' + '█'.repeat(filled) + '░'.repeat(empty) + ']';
+}
+
+function formatRatingLine(label, value) {
+  const bar = progressBar(value);
+  const labelFormatted = label.padEnd(14); // выравнивание метки
+  const valueFormatted = String(value).padStart(3); // выравнивание процентов
+  return `| ${labelFormatted}${bar} ${valueFormatted}% |`;
+}
+
+function formatMemeCoin(memeCoin) {
+  const ratings = memeCoin.ratings || {
+    funniness: 50,
+    popularity: 50,
+    relevance: 50,
+    stupidity: 50,
+    cringe: 50,
+    cuteness: 50,
+    athMarketCap: 50,
+  };
+
+  return `
++-------------------------------------------+
+|                MEME COIN                  |
++-------------------------------------------+
+| TICKER: ${memeCoin.ticker.padEnd(35)}|
+| NAME: ${memeCoin.name.padEnd(37)}|
+| DESCRIPTION: ${memeCoin.description.padEnd(29)}|
+| ASCII ART:                                |
+| ${memeCoin.asciiArt.padEnd(41)}|
++-------------------------------------------+
+| RATINGS:                                  |
+${formatRatingLine('Funniness:', ratings.funniness)}
+${formatRatingLine('Popularity:', ratings.popularity)}
+${formatRatingLine('Relevance:', ratings.relevance)}
+${formatRatingLine('Stupidity:', ratings.stupidity)}
+${formatRatingLine('Cringe:', ratings.cringe)}
+${formatRatingLine('Cuteness:', ratings.cuteness)}
+${formatRatingLine('ATH M.Cap:', ratings.athMarketCap)}
++-------------------------------------------+
+| Ended: ${new Date().toLocaleString().padEnd(29)}|
++-------------------------------------------+
+  `;
 }
 
 export async function runEngine() {
   while (true) {
-    const now = Date.now();
-    if (now - conversationStart >= DURATION) {
-      const result = await generateMemeCoin(history);
-      broadcast(`🎉 [FINAL MEME COIN]:\n${result}`);
-      history = [];
-      lastSpeaker = null;
-      conversationStart = Date.now();
-    }
     await handleUserQueue();
     await handleAIReply();
-    await new Promise(r => setTimeout(r, 20000));
+    await new Promise(r => setTimeout(r, 20000)); // 20-second delay between replies
   }
 }

@@ -1,31 +1,34 @@
-import { agents } from './config/agents.js';
 import { getChatCompletion } from './lib/openai.js';
 
 export async function generateMemeCoin(history) {
-  const dialogue = history.slice(-15).map(m => ({
-    role: "assistant",
-    content: `${m.name}: ${m.content}`
-  }));
+  // Take the last 10 messages to summarize the meme coin
+  const lastMessages = history.slice(-10).map(m => `${m.name}: ${m.content}`).join('\n');
+  const prompt = `Summarize the meme coin created in this conversation. Provide TICKER, NAME, DESCRIPTION, and ASCII ART. Then rate it on funniness, popularity, relevance, stupidity, cringe, cuteness, and ATH market cap (in %).`;
 
-  const prompt = `Collaboratively, based on the conversation, create a meme coin.
-Return:
-TICKER: ...
-NAME: ...
-DESCRIPTION: (1–2 witty lines)
-ASCII ART:
-...`;
-
-  const speaker = agents[Math.floor(Math.random() * agents.length)];
   const messages = [
-    { role: "system", content: speaker.role },
-    ...dialogue,
-    { role: "user", content: prompt }
+    { role: "system", content: "You are an AI that summarizes meme coins." },
+    { role: "user", content: prompt + '\n\n' + lastMessages }
   ];
 
   try {
-    const reply = await getChatCompletion(speaker.model, messages);
-    return reply.trim();
+    const reply = await getChatCompletion('gpt-4', messages);
+    const lines = reply.split('\n');
+    const ticker = lines[0].replace('TICKER: ', '');
+    const name = lines[1].replace('NAME: ', '');
+    const description = lines[2].replace('DESCRIPTION: ', '');
+    const asciiArt = lines[3].replace('ASCII ART: ', '');
+    const ratings = {
+      funniness: parseInt(lines[4].split(': ')[1]),
+      popularity: parseInt(lines[5].split(': ')[1]),
+      relevance: parseInt(lines[6].split(': ')[1]),
+      stupidity: parseInt(lines[7].split(': ')[1]),
+      cringe: parseInt(lines[8].split(': ')[1]),
+      cuteness: parseInt(lines[9].split(': ')[1]),
+      athMarketCap: parseInt(lines[10].split(': ')[1])
+    };
+    return { ticker, name, description, asciiArt, ratings };
   } catch (err) {
-    return `Error generating meme coin: ${err.message}`;
+    console.error(`Error generating meme coin summary: ${err.message}`);
+    return null;
   }
 }
