@@ -4,24 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Crypto Terminal</title>
+  <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="terminal">
-    <pre id="output"></pre>
-    <div id="input-area">
-      <span>&gt;</span>
-      <input id="user-input" placeholder="Type..." maxlength="200">
-      <button id="send-btn">Send</button>
-      <span id="cooldown"></span>
+  <div class="piece">
+    <div class="frame"></div>
+    <div class="output">
+      <pre id="output"></pre>
+      <div id="input-area">
+        <span>&gt;</span>
+        <input id="user-input" placeholder="Type..." maxlength="200">
+        <button id="send-btn">Send</button>
+        <span id="cooldown"></span>
+      </div>
     </div>
+    <div class="scanlines"></div>
+    <div class="glow"></div>
+    <div class="noisy"></div>
+    <div class="emblem icon-information"></div>
   </div>
-
-  <!-- CRT эффекты -->
-  <div class="scanlines"></div>
-  <div class="glow"></div>
-  <div class="noisy"></div>
-
   <script src="script.js"></script>
 </body>
 </html>
