@@ -1,16 +1,13 @@
-const input = document.getElementById('user-input');
 const output = document.getElementById('output');
-const outputContainer = document.querySelector('.output-container');
 
-let shouldAutoScroll = true;
-
+// Создание уникального userId
 let userId = localStorage.getItem('terminalUserId');
 if (!userId) {
   userId = 'User' + Math.floor(Math.random() * 1000000000);
   localStorage.setItem('terminalUserId', userId);
 }
 
-// Создаем поле ввода
+// Создание inputLine
 const inputLine = document.createElement('div');
 inputLine.className = 'input-line';
 inputLine.innerHTML = `
@@ -20,67 +17,56 @@ inputLine.innerHTML = `
 `;
 output.appendChild(inputLine);
 
-// Скрытое поле ввода
+// Скрытый input
 const hiddenInput = document.createElement('input');
 hiddenInput.id = 'user-input';
 hiddenInput.type = 'text';
 hiddenInput.className = 'hidden-input';
 document.body.appendChild(hiddenInput);
 
-// Автофокус при загрузке
-window.onload = () => hiddenInput.focus();
-
-// Повторный фокус при возврате на вкладку
-window.addEventListener('focus', () => {
-  hiddenInput.focus();
-});
-
-// Если пользователь кликает по терминалу — тоже фокусим
-outputContainer.addEventListener('click', () => {
-  hiddenInput.focus();
-});
-
-// Проверка, видим ли inputLine
-function isInputVisible() {
-  const rect = inputLine.getBoundingClientRect();
-  return (
-    rect.bottom <= window.innerHeight &&
-    rect.top >= 0
-  );
-}
-
-// Прокрутка вниз, если нужно
-function maybeScrollToBottom(force = false) {
-  if (force || shouldAutoScroll) {
-    outputContainer.scrollTop = outputContainer.scrollHeight;
-  }
-}
-
-// Следим за ручной прокруткой
-outputContainer.addEventListener('scroll', () => {
-  const { scrollTop, scrollHeight, clientHeight } = outputContainer;
-  shouldAutoScroll = scrollHeight - scrollTop <= clientHeight + 5;
-});
-
-hiddenInput.addEventListener('input', () => {
-  updateInputDisplay();
-  if (!isInputVisible()) {
-    maybeScrollToBottom(true); // Принудительно скроллим, если поле не видно
-  }
-});
-
-hiddenInput.addEventListener('keydown', e => {
-  if (!isInputVisible()) {
-    maybeScrollToBottom(true);
-  }
-  if (e.key === "Enter") sendMessage();
-});
-
+// Обновление текста в inputLine
 function updateInputDisplay() {
   const inputText = document.querySelector('.input-text');
   inputText.textContent = hiddenInput.value;
 }
 
+// Проверка: выделяет ли пользователь текст
+function isSelectingText() {
+  const sel = window.getSelection();
+  return sel && sel.type === 'Range';
+}
+
+// Автофокус при загрузке
+window.onload = () => {
+  if (!isSelectingText()) hiddenInput.focus();
+};
+
+// Автофокус при возвращении на вкладку
+window.addEventListener('focus', () => {
+  setTimeout(() => {
+    if (!isSelectingText()) hiddenInput.focus();
+  }, 50);
+});
+
+// Автофокус при клике по терминалу
+document.querySelector('.output-container').addEventListener('click', () => {
+  if (!isSelectingText()) hiddenInput.focus();
+});
+
+// Прокрутка к нижней части, если пользователь печатает и не скроллит вручную
+function scrollToInputIfNeeded() {
+  const container = document.querySelector('.output-container');
+  const containerBottom = container.scrollTop + container.clientHeight;
+  const inputBottom = inputLine.offsetTop + inputLine.offsetHeight;
+
+  const atBottom = Math.abs(containerBottom - container.scrollHeight) < 5;
+
+  if (inputBottom > containerBottom || atBottom) {
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+// Отправка сообщения
 function sendMessage() {
   const msg = hiddenInput.value.trim();
   if (!msg) return;
@@ -91,15 +77,29 @@ function sendMessage() {
 
   hiddenInput.value = '';
   updateInputDisplay();
-  maybeScrollToBottom();
 
   fetch('/user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: msg, sender: userId })
   });
+
+  scrollToInputIfNeeded();
 }
 
+// Обработка ввода
+hiddenInput.addEventListener('input', () => {
+  updateInputDisplay();
+  scrollToInputIfNeeded();
+});
+
+hiddenInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+
+// Typewriter-эффект для входящих сообщений
 function typewriterEffect(data) {
   const line = document.createElement('div');
   output.insertBefore(line, inputLine);
@@ -109,6 +109,7 @@ function typewriterEffect(data) {
   const message = messageParts.join("]: ");
 
   line.textContent = name + ": ";
+
   const cursor = document.createElement("span");
   cursor.className = "typing-cursor";
   cursor.innerText = "▋";
@@ -118,7 +119,7 @@ function typewriterEffect(data) {
   const interval = setInterval(() => {
     if (i < message.length) {
       line.insertBefore(document.createTextNode(message[i]), cursor);
-      maybeScrollToBottom();
+      scrollToInputIfNeeded();
       i++;
     } else {
       clearInterval(interval);
@@ -127,8 +128,9 @@ function typewriterEffect(data) {
   }, 30);
 }
 
+// Подключение к EventSource
 const es = new EventSource('/stream');
-es.onmessage = e => {
+es.onmessage = (e) => {
   if (!e.data.startsWith(`[${userId}]`)) {
     typewriterEffect(e.data);
   }
