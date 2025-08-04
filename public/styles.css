@@ -166,11 +166,11 @@ a:hover {
   display: inline-block;
   color: #EA9806;
   margin-left: 1px;
-  /* animation: blink 1s step-start infinite; */
+  animation: blink 1s step-start infinite;
 }
-/* @keyframes blink {
+@keyframes blink {
   50% { opacity: 0; }
-} */
+}
 .hidden-input {
   position: absolute;
   opacity: 0;
