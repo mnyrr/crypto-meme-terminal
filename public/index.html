@@ -7,13 +7,22 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="terminal">
-    <pre id="output"></pre>
+  <svg>
+    <filter id="fisheye">
+      <feComponentTransfer>
+        <feFuncR type="table" tableValues="0 0.1 0.3 0.6 1"/>
+        <feFuncG type="table" tableValues="0 0.1 0.3 0.6 1"/>
+        <feFuncB type="table" tableValues="0 0.1 0.3 0.6 1"/>
+      </feComponentTransfer>
+    </filter>
+  </svg>
+  <div id="terminal" role="main" aria-label="Crypto Terminal">
+    <pre id="output" aria-live="polite"></pre>
     <div id="input-area">
-      <span>&gt;</span>
-      <input id="user-input" placeholder="Type..." maxlength="200">
-      <button id="send-btn">Send</button>
-      <span id="cooldown"></span>
+      <span aria-hidden="true">&gt;</span>
+      <input id="user-input" placeholder="Type..." maxlength="200" aria-label="Enter your message">
+      <button id="send-btn" aria-label="Send message">Send</button>
+      <span id="cooldown" aria-live="polite"></span>
     </div>
   </div>
   <script src="script.js"></script>
