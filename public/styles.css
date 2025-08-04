@@ -1,7 +1,7 @@
 /* Основные стили */
 body {
   color: #EA9806;
-  font-family: "Source Code Pro", monospace;
+  /* font-family: "Source Code Pro", monospace; */
   font-size: 24px;
   -webkit-font-smoothing: none;
   line-height: 1.2;
@@ -64,8 +64,8 @@ body {
   min-height: 0%;
   display: flex;
   flex-direction: column;
-  font-family: "Source Code Pro", monospace;
-  font-weight: 600;
+  /* font-family: "Source Code Pro", monospace; */
+  /* font-weight: 600; */
   font-size: 18px;
   line-height: 1.05;
   text-shadow: 0 0.2rem 1rem #5F3A00;
@@ -237,7 +237,7 @@ a:hover {
   color: #EA9806;
   background-color: transparent;
   border: transparent;
-  font-family: "Source Code Pro", monospace;
+  /* font-family: "Source Code Pro", monospace; */
   font-size: 26px;
   text-decoration: none;
   text-shadow: 0 0.2rem 1rem #5F3A00;
@@ -250,7 +250,7 @@ a:hover {
   background-color: transparent;
   border: transparent;
   font-size: 20px;
-  font-weight: 600;
+  /* font-weight: 600; */
   text-decoration: none;
   text-shadow: 0 0.2rem 1rem #5F3A00;
   cursor: pointer;
