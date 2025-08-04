@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CRT Terminal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Terminal</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="noisy">
-  <div class="crt-output">
-    <span>User2348922945:</span> Привет. Система загружена. Жду команд...
+<body>
+  <div id="terminal">
+    <pre id="output"></pre>
+    <div id="input-area">
+      <span>&gt;</span>
+      <input id="user-input" placeholder="Type..." maxlength="200">
+      <button id="send-btn">Send</button>
+      <span id="cooldown"></span>
+    </div>
   </div>
 
-  <div class="scanlines noclick"></div>
-  <div class="glow noclick"></div>
+  <!-- CRT эффекты -->
+  <div class="scanlines"></div>
+  <div class="glow"></div>
+  <div class="noisy"></div>
+
+  <script src="script.js"></script>
 </body>
 </html>
