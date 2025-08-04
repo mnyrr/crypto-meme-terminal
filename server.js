@@ -13,8 +13,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 app.post('/user', (req, res) => {
-  if (typeof req.body.message === 'string' && req.body.message.trim()) {
-    addUserMessage(req.body.message.trim());
+  const text = req.body.message?.trim();
+  const sender = req.body.sender?.trim() || 'Anonymous';
+
+  if (text) {
+    addUserMessage(sender, text);
     res.sendStatus(200);
   } else {
     res.sendStatus(400);

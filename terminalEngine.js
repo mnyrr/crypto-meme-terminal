@@ -8,8 +8,8 @@ const DURATION = 15 * 60 * 1000;
 const START = Date.now();
 const userQueue = [];
 
-export function addUserMessage(text) {
-  userQueue.push({ name: 'You', content: text });
+export function addUserMessage(sender, content) {
+  userQueue.push({ name: sender, content });
 }
 
 export function subscribeToMessages(send) {

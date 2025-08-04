@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  background-color: #1a1a1a;
+  background-color: #1c1c1c; /* чуть светлее */
   color: #ffa500;
   font-family: 'Courier New', Courier, monospace;
   display: flex;
@@ -17,10 +17,10 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background-color: #101010;
+  background-color: #1c1c1c;
   border-radius: 6px;
-  box-shadow: 0 0 40px #ff8c00;
-  transform: rotateX(4deg) rotateY(-2deg);
+  box-shadow: 0 0 30px #ff8c00;
+  transform: rotateX(2deg) rotateY(-1deg); /* уменьшено */
   overflow: hidden;
 }
 

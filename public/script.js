@@ -4,6 +4,11 @@ const output = document.getElementById('output');
 const cooldown = document.getElementById('cooldown');
 
 let isCooldown = false;
+let userId = localStorage.getItem('terminalUserId');
+if (!userId) {
+  userId = 'User' + Math.floor(Math.random() * 1000000000);
+  localStorage.setItem('terminalUserId', userId);
+}
 
 sendBtn.onclick = sendMessage;
 input.addEventListener("keydown", e => {
@@ -15,10 +20,14 @@ function sendMessage() {
   if (!msg || isCooldown) return;
   input.value = '';
   startCooldown(30);
+
+  // отображаем в терминале сразу
+  typewriterEffect(`[${userId}]: ${msg}\n`);
+
   fetch('/user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: msg })
+    body: JSON.stringify({ message: msg, sender: userId })
   });
 }
 
@@ -53,10 +62,9 @@ function typewriterEffect(text) {
       clearInterval(interval);
       cursor.remove();
     }
-  }, 20);
+  }, 10);
 }
 
-// SSE
 const es = new EventSource('/stream');
 es.onmessage = e => {
   typewriterEffect(e.data + "\n");
