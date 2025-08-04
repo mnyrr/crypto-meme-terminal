@@ -1,6 +1,5 @@
 const input = document.getElementById('user-input');
 const output = document.getElementById('output');
-const prompt = document.getElementById('prompt');
 
 let userId = localStorage.getItem('terminalUserId');
 if (!userId) {
@@ -8,29 +7,46 @@ if (!userId) {
   localStorage.setItem('terminalUserId', userId);
 }
 
-// Установка prompt
-prompt.textContent = `[${userId}]: `;
+// Создаем поле ввода внутри output
+const inputLine = document.createElement('div');
+inputLine.className = 'input-line';
+inputLine.innerHTML = `
+  <span class="prompt">[${userId}]: </span>
+  <span class="input-text"></span>
+  <span class="cursor">▋</span>
+`;
+output.appendChild(inputLine);
 
-// Курсор для ввода
-const cursor = document.createElement('span');
-cursor.className = 'cursor';
-cursor.textContent = '▋';
-input.parentNode.appendChild(cursor);
+// Скрытое поле ввода для реального ввода
+const hiddenInput = document.createElement('input');
+hiddenInput.id = 'user-input';
+hiddenInput.type = 'text';
+hiddenInput.className = 'hidden-input';
+document.body.appendChild(hiddenInput);
 
-input.addEventListener("keydown", e => {
+hiddenInput.addEventListener('input', updateInputDisplay);
+hiddenInput.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
 
+function updateInputDisplay() {
+  const inputText = document.querySelector('.input-text');
+  inputText.textContent = hiddenInput.value;
+}
+
 function sendMessage() {
-  const msg = input.value.trim();
+  const msg = hiddenInput.value.trim();
   if (!msg) return;
-  input.value = '';
   
   // Мгновенный вывод для текущего пользователя
-  const line = `[${userId}]: ${msg}\n`;
-  output.appendChild(document.createTextNode(line));
-  output.scrollTop = output.scrollHeight;
-
+  const line = document.createElement('div');
+  line.textContent = `[${userId}]: ${msg}`;
+  output.insertBefore(line, inputLine);
+  
+  // Очищаем ввод
+  hiddenInput.value = '';
+  updateInputDisplay();
+  
   // Отправка на сервер
   fetch('/user', {
     method: 'POST',
@@ -40,30 +56,31 @@ function sendMessage() {
 }
 
 function typewriterEffect(data) {
+  const line = document.createElement('div');
+  output.insertBefore(line, inputLine);
+  
   const [namePart, ...messageParts] = data.split("]: ");
   const name = namePart + "]"; 
-  const message = messageParts.join("]: ") + "\n";
+  const message = messageParts.join("]: ");
 
   // Мгновенно добавляем имя
-  const nameNode = document.createTextNode(name + ": ");
-  output.appendChild(nameNode);
+  line.textContent = name + ": ";
 
   // Добавляем курсор
   const cursor = document.createElement("span");
-  cursor.className = "cursor";
+  cursor.className = "typing-cursor";
   cursor.innerText = "▋";
-  output.appendChild(cursor);
+  line.appendChild(cursor);
 
   let i = 0;
   const interval = setInterval(() => {
     if (i < message.length) {
-      output.insertBefore(document.createTextNode(message[i]), cursor);
+      line.insertBefore(document.createTextNode(message[i]), cursor);
       output.scrollTop = output.scrollHeight;
       i++;
     } else {
       clearInterval(interval);
       cursor.remove();
-      output.appendChild(document.createTextNode("\n"));
     }
   }, 30);
 }
@@ -76,4 +93,4 @@ es.onmessage = e => {
 };
 
 // Автофокус на поле ввода при загрузке
-window.onload = () => input.focus();
+window.onload = () => hiddenInput.focus();

@@ -262,3 +262,46 @@ a:hover {
   pointer-events: none;
 }
 
+/* Стили для терминального вывода */
+.output-container {
+  height: 100%;
+  overflow: auto;
+  padding: 4rem 3rem;
+}
+
+#output {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'VT323', monospace;
+  font-size: 24px;
+  line-height: 1.2;
+  text-shadow: 0 0.2rem 1rem #5F3A00;
+}
+
+.input-line {
+  display: flex;
+  align-items: center;
+  margin-top: auto; /* Прижимаем к низу */
+}
+
+.prompt {
+  color: #EA9806;
+}
+
+.input-text {
+  color: #EA9806;
+}
+
+.cursor, .typing-cursor {
+  display: inline-block;
+  color: #EA9806;
+  margin-left: 1px;
+  animation: none !important;
+}
+
+.hidden-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
