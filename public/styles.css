@@ -1,7 +1,7 @@
 /* Основные стили */
 body {
   color: #EA9806;
-  font-family: 'VT323', monospace;
+  font-family: "Source Code Pro", monospace;
   font-size: 24px;
   -webkit-font-smoothing: none;
   line-height: 1.2;
@@ -51,7 +51,7 @@ body {
   overflow: auto;
   padding-top: 6rem;
   padding-bottom: 5rem;
-  padding-left: 3rem;
+  padding-left: 5rem;
   padding-right: 30rem;
   background-color: #432600;
   position: absolute;
@@ -64,11 +64,15 @@ body {
   min-height: 0%;
   display: flex;
   flex-direction: column;
-  font-family: 'VT323', monospace;
-  font-size: 22px;
-  line-height: 1.1;
+  font-family: "Source Code Pro", monospace;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.05;
   text-shadow: 0 0.2rem 1rem #5F3A00;
   white-space: pre-wrap;
+}
+#output > div {
+  margin-bottom: 1rem;
 }
 /* Анимация мерцания экрана */
 .output-container {
@@ -233,7 +237,7 @@ a:hover {
   color: #EA9806;
   background-color: transparent;
   border: transparent;
-  font-family: 'VT323', monospace;
+  font-family: "Source Code Pro", monospace;
   font-size: 26px;
   text-decoration: none;
   text-shadow: 0 0.2rem 1rem #5F3A00;
@@ -245,8 +249,8 @@ a:hover {
   color: #EA9806;
   background-color: transparent;
   border: transparent;
-  font-family: 'VT323', monospace;
-  font-size: 28px;
+  font-size: 20px;
+  font-weight: 600;
   text-decoration: none;
   text-shadow: 0 0.2rem 1rem #5F3A00;
   cursor: pointer;
@@ -258,7 +262,6 @@ a:hover {
 }
 .back-button {
   position: absolute;
-  top: 2rem;
-  left: 3rem;
+  top: 2.5rem;
   padding: 0rem 0.9rem;
 }
