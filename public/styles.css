@@ -43,6 +43,7 @@ body {
   width: 100%;
   pointer-events: none;
   z-index: 10;
+  margin-bottom: 25rem;
 }
 /* Область вывода */
 .output-container {
@@ -55,7 +56,7 @@ body {
   left: 0;
   width: 100%;
   z-index: 1;
-  margin-bottom: 20rem;
+  /* margin-bottom: 20rem; */
 }
 #output {
   max-height: 100%;
@@ -67,7 +68,7 @@ body {
   line-height: 1.2;
   text-shadow: 0 0.2rem 1rem #5F3A00;
   white-space: pre-wrap;
-  margin-bottom: 25rem;
+  /* margin-bottom: 25rem; */
 }
 /* Анимация мерцания экрана */
 .output-container {
