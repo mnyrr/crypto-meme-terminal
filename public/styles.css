@@ -76,6 +76,7 @@ body {
   left: 0;
   width: 100%;
   z-index: 1;
+  margin-bottom: 20rem;
 }
 #output {
   max-height: calc(100% - 10rem);
