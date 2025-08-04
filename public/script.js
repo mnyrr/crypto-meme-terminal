@@ -1,30 +1,37 @@
 const input = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
 const output = document.getElementById('output');
-const cooldown = document.getElementById('cooldown');
+const prompt = document.getElementById('prompt');
 
-let isCooldown = false;
 let userId = localStorage.getItem('terminalUserId');
 if (!userId) {
   userId = 'User' + Math.floor(Math.random() * 1000000000);
   localStorage.setItem('terminalUserId', userId);
 }
 
-sendBtn.onclick = sendMessage;
+// Установка prompt
+prompt.textContent = `[${userId}]: `;
+
+// Курсор для ввода
+const cursor = document.createElement('span');
+cursor.className = 'cursor';
+cursor.textContent = '▋';
+input.parentNode.appendChild(cursor);
+
 input.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
 
 function sendMessage() {
   const msg = input.value.trim();
-  if (!msg || isCooldown) return;
+  if (!msg) return;
   input.value = '';
-  startCooldown(30);
+  
+  // Мгновенный вывод для текущего пользователя
+  const line = `[${userId}]: ${msg}\n`;
+  output.appendChild(document.createTextNode(line));
+  output.scrollTop = output.scrollHeight;
 
-  // Мгновенно отображаем сообщение пользователя на клиенте
-  typewriterEffect(`[${userId}]: ${msg}\n`);
-
-  // Отправляем сообщение на сервер для сохранения в истории
+  // Отправка на сервер
   fetch('/user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -32,32 +39,16 @@ function sendMessage() {
   });
 }
 
-function startCooldown(sec) {
-  isCooldown = true;
-  sendBtn.disabled = true;
-  cooldown.innerText = `Next in ${sec}s`;
-  const iv = setInterval(() => {
-    sec--;
-    cooldown.innerText = sec > 0 ? `Next in ${sec}s` : '';
-    if (sec <= 0) {
-      clearInterval(iv);
-      isCooldown = false;
-      sendBtn.disabled = false;
-    }
-  }, 1000);
-}
-
 function typewriterEffect(data) {
-  // Разделяем данные на имя и текст сообщения
   const [namePart, ...messageParts] = data.split("]: ");
-  const name = namePart + "]"; // Включаем скобки
-  const message = messageParts.join("]: ") + "\n"; // Добавляем перенос строки
+  const name = namePart + "]"; 
+  const message = messageParts.join("]: ") + "\n";
 
   // Мгновенно добавляем имя
   const nameNode = document.createTextNode(name + ": ");
   output.appendChild(nameNode);
 
-  // Добавляем курсор для эффекта печатания
+  // Добавляем курсор
   const cursor = document.createElement("span");
   cursor.className = "cursor";
   cursor.innerText = "▋";
@@ -72,15 +63,17 @@ function typewriterEffect(data) {
     } else {
       clearInterval(interval);
       cursor.remove();
-      output.appendChild(document.createTextNode("\n")); // Добавляем дополнительный перенос
+      output.appendChild(document.createTextNode("\n"));
     }
   }, 30);
 }
 
 const es = new EventSource('/stream');
 es.onmessage = e => {
-  // Пропускаем сообщения пользователя, чтобы избежать дублирования
   if (!e.data.startsWith(`[${userId}]`)) {
     typewriterEffect(e.data);
   }
 };
+
+// Автофокус на поле ввода при загрузке
+window.onload = () => input.focus();
