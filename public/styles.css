@@ -185,27 +185,51 @@ a:hover {
   color: #2F1B00;
 }
 
-/* Стили для кнопок */
+/* Стили для кнопок в ASCII-стиле */
 .terminal-button, .back-button {
   display: inline-block;
-  padding: 0.5rem 1rem;
   color: #EA9806;
   background-color: transparent;
-  border: 0.2rem solid #EA9806;
   font-family: 'VT323', monospace;
   font-size: 24px;
   text-decoration: none;
   text-shadow: 0 0.2rem 1rem #5F3A00;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  position: relative;
+  padding: 0.2rem 0.5rem;
+  line-height: 1.2;
+}
+
+/* Псевдоэлементы для ASCII-рамки */
+.terminal-button::before, .back-button::before {
+  content: "╔═╗";
+  position: absolute;
+  top: -0.8rem;
+  left: -0.2rem;
+  color: #EA9806;
+}
+.terminal-button::after, .back-button::after {
+  content: "╚═╝";
+  position: absolute;
+  bottom: -0.8rem;
+  left: -0.2rem;
+  color: #EA9806;
+}
+.terminal-button span, .back-button span {
+  display: inline-block;
+  padding: 0 0.5rem;
 }
 .terminal-button:hover, .back-button:hover {
   background-color: #EA9806;
+  color: #2F1B00;
+}
+.terminal-button:hover::before, .back-button:hover::before,
+.terminal-button:hover::after, .back-button::after {
   color: #2F1B00;
 }
 .back-button {
   position: absolute;
   top: 1rem;
   left: 1rem;
-  padding: 0.3rem 0.8rem;
+  padding: 0.1rem 0.3rem;
 }
