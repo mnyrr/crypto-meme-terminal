@@ -46,26 +46,36 @@ function startCooldown(sec) {
   }, 1000);
 }
 
-function typewriterEffect(text) {
-  let i = 0;
+function typewriterEffect(data) {
+  // Разделяем данные на имя и текст сообщения
+  const [name, ...messageParts] = data.split(":\n");
+  const message = messageParts.join(":\n");
+
+  // Мгновенно добавляем имя
+  const nameNode = document.createTextNode(name + ":\n");
+  output.appendChild(nameNode);
+
+  // Добавляем курсор для эффекта печатания
   const cursor = document.createElement("span");
   cursor.className = "cursor";
   cursor.innerText = "▋";
   output.appendChild(cursor);
 
+  let i = 0;
   const interval = setInterval(() => {
-    if (i < text.length) {
-      output.insertBefore(document.createTextNode(text[i]), cursor);
+    if (i < message.length) {
+      output.insertBefore(document.createTextNode(message[i]), cursor);
       output.scrollTop = output.scrollHeight;
       i++;
     } else {
       clearInterval(interval);
       cursor.remove();
+      output.appendChild(document.createTextNode("\n")); // Добавляем перенос строки после сообщения
     }
   }, 30);
 }
 
 const es = new EventSource('/stream');
 es.onmessage = e => {
-  typewriterEffect(e.data + "\n");
+  typewriterEffect(e.data);
 };
