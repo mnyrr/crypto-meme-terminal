@@ -12,8 +12,8 @@ const inputLine = document.createElement('div');
 inputLine.className = 'input-line';
 inputLine.innerHTML = `
   <span class="prompt">[${userId}]: </span>
-  <span class="input-text"></span>
-  <span class="cursor">▋</span>
+  <span class="input-text"><span class="cursor">▋</span></span>
+
 `;
 output.appendChild(inputLine);
 
@@ -27,7 +27,12 @@ document.body.appendChild(hiddenInput);
 // Обновление текста в inputLine
 function updateInputDisplay() {
   const inputText = document.querySelector('.input-text');
-  inputText.textContent = hiddenInput.value;
+  const cursor = inputText.querySelector('.cursor');
+
+  // Удаляем всё, кроме курсора
+  inputText.innerHTML = '';
+  inputText.appendChild(document.createTextNode(hiddenInput.value));
+  inputText.appendChild(cursor);
 }
 
 // Проверка: выделяет ли пользователь текст
