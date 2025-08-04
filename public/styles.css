@@ -1,25 +1,25 @@
 body {
   margin: 0;
-  background-color: #1c1c1c; /* чуть светлее */
+  background-color: #171718; /* чуть светлее */
   color: #ffa500;
   font-family: 'Courier New', Courier, monospace;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  perspective: 800px;
+/*   perspective: 800px; */
 }
 
 #terminal {
   width: 90%;
   height: 90%;
-  padding: 20px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background-color: #1c1c1c;
+  background-color: #171717;
   border-radius: 6px;
-  box-shadow: 0 0 30px #ff8c00;
+  box-shadow: 0 0 10px #ff8c00;
   transform: rotateX(2deg) rotateY(-1deg); /* уменьшено */
   overflow: hidden;
 }
@@ -29,7 +29,7 @@ body {
   overflow-y: auto;
   white-space: pre-wrap;
   filter: blur(0.3px) contrast(1.2);
-  text-shadow: 0 0 5px #ff9900;
+  text-shadow: 0 0 4px #ff9900;
 }
 
 #input-area {
