@@ -87,6 +87,7 @@ body {
   line-height: 1.2;
   text-shadow: 0 0.2rem 1rem #5F3A00;
   white-space: pre-wrap;
+  margin-bottom: 20rem;
 }
 /* Анимация мерцания экрана */
 .output-container {
