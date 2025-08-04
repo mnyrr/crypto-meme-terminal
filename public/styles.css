@@ -207,13 +207,13 @@ a:hover {
 /* Курсор */
 .cursor {
   display: inline-block;
-  animation: blink 1s step-start infinite;
+  /* animation: blink 1s step-start infinite; */
   color: #EA9806;
   margin-left: 1px;
 }
-@keyframes blink {
+/* @keyframes blink {
   50% { opacity: 0; }
-}
+} */
 /* Выделение текста */
 ::-moz-selection {
   background-color: #EA9806;
