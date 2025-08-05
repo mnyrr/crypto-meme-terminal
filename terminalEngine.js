@@ -19,10 +19,12 @@ export function addUserMessage(sender, content) {
   broadcast(`[${sender}]: ${content}`);
   userQueue.push(message);
   messageCount++; // Увеличиваем счётчик
+  console.log(`Message added - Count: ${messageCount}`);
 }
 
 export function subscribeToMessages(send) {
   listeners.push(send);
+  console.log(`New listener subscribed - Total: ${listeners.length}`);
 }
 
 export function getCurrentHistory() {
@@ -30,7 +32,13 @@ export function getCurrentHistory() {
 }
 
 function broadcast(msg) {
-  listeners.forEach(f => f(msg));
+  listeners.forEach(f => {
+    try {
+      f(msg);
+    } catch (e) {
+      console.error(`Broadcast error to listener: ${e.message}`);
+    }
+  });
 }
 
 function pickNextSpeaker() {
@@ -39,7 +47,7 @@ function pickNextSpeaker() {
 }
 
 function buildContext() {
-  return history.slice(-8).map(m => {
+  return history.slice(-4).map(m => { // Сократили до 4 сообщений
     const isAI = agents.some(a => a.name === m.name);
     return isAI ? { role: 'assistant', content: m.content } : { role: 'user', content: `@${m.name}: ${m.content}` };
   });
@@ -64,6 +72,7 @@ async function handleAIReply() {
     history.push({ name: speaker.name, content });
     broadcast(`[${speaker.name}]: ${content}`);
     messageCount++; // Увеличиваем счётчик после ответа
+    console.log(`AI reply - Speaker: ${speaker.name}, Count: ${messageCount}`);
 
     if (shouldEndDialog()) {
       await endDialog();
@@ -76,17 +85,18 @@ async function handleAIReply() {
 async function handleUserQueue() {
   if (userQueue.length > 0) {
     userQueue.shift();
+    console.log(`User queue processed - Remaining: ${userQueue.length}`);
   }
 }
 
 function shouldEndDialog() {
   const coinMentions = {};
   history.forEach(m => {
-    const coins = m.content.match(/\*\*[A-Z]+\*\*/g); // Ищем упоминания мем-коинов вроде **COIN**
+    const coins = m.content.match(/\*\*[A-Z]+\*\*/g); // Ищем упоминания мем-коинов
     if (coins) {
       coins.forEach(coin => {
         coinMentions[coin] = (coinMentions[coin] || 0) + 1;
-        if (coinMentions[coin] >= 3) return true; // Завершение при 3 упоминаниях
+        if (coinMentions[coin] >= 3) return true;
       });
     }
   });

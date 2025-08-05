@@ -49,11 +49,14 @@ app.get('/stream', (req, res) => {
   });
 
   const sendMessage = (msg) => {
+    if (res.writableEnded) return;
     res.write(`data: ${msg}\n\n`);
   };
   subscribeToMessages(sendMessage);
+  console.log('Stream connected');
 
   req.on('close', () => {
+    console.log('Stream disconnected');
     res.end();
   });
 });

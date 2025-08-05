@@ -24,6 +24,7 @@ body {
   top: 0;
   width: 100%;
   position: relative;
+  background-color: #151411;
 }
 /* Рамка терминала */
 .frame {
@@ -48,14 +49,13 @@ body {
 }
 /* Область вывода */
 .output-container {
-  height: 100%;
+  height: 90%;
   overflow: auto;
   padding-top: 6rem;
   padding-bottom: 5rem;
   padding-left: 3rem;
   padding-right: 35rem;
   min-width: 1500px;
-  background-color: #151411;
   position: absolute;
   top: 0;
   left: 0;
