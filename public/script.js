@@ -134,7 +134,7 @@ function typewriterEffect(data) {
       inputLine.style.display = 'flex';
       moveInputToEnd();
     }
-  }, 30);
+  }, 20);
 }
 
 async function loadInitialHistory() {
