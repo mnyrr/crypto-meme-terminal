@@ -33,18 +33,21 @@ app.post('/user', (req, res) => {
   }
 });
 
+app.get('/initial-history', (req, res) => {
+  const currentHistory = getCurrentHistory();
+  res.json(currentHistory);
+});
+
 app.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
-  // Отправляем текущую историю при подключении
   const currentHistory = getCurrentHistory();
   currentHistory.forEach(msg => {
     res.write(`data: ${msg}\n\n`);
   });
 
-  // Подписываемся на новые сообщения
   const sendMessage = (msg) => {
     res.write(`data: ${msg}\n\n`);
   };

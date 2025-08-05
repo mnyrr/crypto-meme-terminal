@@ -1,45 +1,35 @@
 const output = document.getElementById('output');
 
-// Создание уникального userId
 let userId = localStorage.getItem('terminalUserId');
 if (!userId) {
   userId = 'User' + Math.floor(Math.random() * 1000000000);
   localStorage.setItem('terminalUserId', userId);
 }
 
-// Создание inputLine
 const inputLine = document.createElement('div');
 inputLine.className = 'input-line';
-inputLine.innerHTML = `
-  <span class="prompt">[${userId}]: </span>
-  <span class="input-text"><span class="cursor">▋</span></span>
-`;
+inputLine.innerHTML = `<span class="prompt">[${userId}]: </span><span class="input-text"><span class="cursor">▋</span></span>`;
 output.appendChild(inputLine);
 
-// Скрытый input
 const hiddenInput = document.createElement('input');
 hiddenInput.id = 'user-input';
 hiddenInput.type = 'text';
 hiddenInput.className = 'hidden-input';
 document.body.appendChild(hiddenInput);
 
-// Обновление текста в inputLine
 function updateInputDisplay() {
   const inputText = document.querySelector('.input-text');
   const cursor = inputText.querySelector('.cursor');
-
   inputText.innerHTML = '';
   inputText.appendChild(document.createTextNode(hiddenInput.value));
   inputText.appendChild(cursor);
 }
 
-// Проверка: выделяет ли пользователь текст
 function isSelectingText() {
   const sel = window.getSelection();
   return sel && sel.type === 'Range';
 }
 
-// Автофокус
 window.onload = async () => {
   if (!isSelectingText()) hiddenInput.focus();
   await loadInitialHistory();
@@ -55,29 +45,24 @@ document.querySelector('.output-container').addEventListener('click', () => {
   if (!isSelectingText()) hiddenInput.focus();
 });
 
-// Управление автоскроллом
 let isAutoScrollEnabled = true;
 
 function checkAutoScroll() {
   const container = document.querySelector('.output-container');
   const containerBottom = container.scrollTop + container.clientHeight;
   const contentBottom = container.scrollHeight;
-
   isAutoScrollEnabled = Math.abs(contentBottom - containerBottom) < 5;
 }
 
 function scrollToBottomIfEnabled() {
   const container = document.querySelector('.output-container');
-  if (isAutoScrollEnabled) {
-    container.scrollTop = container.scrollHeight;
-  }
+  if (isAutoScrollEnabled) container.scrollTop = container.scrollHeight;
 }
 
 function scrollInputIntoView() {
   inputLine.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Отправка сообщения
 function sendMessage() {
   const msg = hiddenInput.value.trim();
   if (!msg) return;
@@ -98,31 +83,25 @@ function sendMessage() {
   scrollToBottomIfEnabled();
 }
 
-// Обработка ввода
 hiddenInput.addEventListener('input', () => {
   updateInputDisplay();
   scrollToBottomIfEnabled();
 });
 
 hiddenInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    sendMessage();
-  }
+  if (e.key === 'Enter') sendMessage();
 });
 
-// Typewriter-эффект для входящих сообщений
 function typewriterEffect(data) {
   const line = document.createElement('div');
   output.insertBefore(line, inputLine);
+  inputLine.style.display = 'none';
 
   const [namePart, ...messageParts] = data.split("]: ");
   const name = namePart + "]";
   const message = messageParts.join("]: ");
 
-  inputLine.style.display = 'none';
-
   line.textContent = name + ": ";
-
   const cursor = document.createElement("span");
   cursor.className = "typing-cursor";
   cursor.innerText = "▋";
@@ -144,7 +123,6 @@ function typewriterEffect(data) {
   }, 30);
 }
 
-// Моментальная загрузка начальной истории
 async function loadInitialHistory() {
   const response = await fetch('/initial-history');
   if (response.ok) {
@@ -158,7 +136,6 @@ async function loadInitialHistory() {
   }
 }
 
-// Подключение к EventSource
 const es = new EventSource('/stream');
 es.onmessage = (e) => {
   if (e.data === '[CLEAR]') {
@@ -169,7 +146,6 @@ es.onmessage = (e) => {
   }
 };
 
-// Обработка прокрутки пользователем
 document.querySelector('.output-container').addEventListener('scroll', () => {
   checkAutoScroll();
 });
