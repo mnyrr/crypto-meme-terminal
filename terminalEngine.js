@@ -33,10 +33,23 @@ function pickNextSpeaker() {
 }
 
 function buildContext() {
-  return history.slice(-8).map(m => ({
-    role: "assistant",
-    content: `${m.name}: ${m.content}`
-  }));
+  return history.slice(-8).map(m => {
+    const isAI = agents.some(a => a.name === m.name);
+
+    if (isAI) {
+      // Сообщение от AI — просто контент, без имени
+      return {
+        role: 'assistant',
+        content: m.content
+      };
+    } else {
+      // Сообщение от пользователя или другого участника — с явным @
+      return {
+        role: 'user',
+        content: `@${m.name}: ${m.content}`
+      };
+    }
+  });
 }
 
 async function handleAIReply() {
