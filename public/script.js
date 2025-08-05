@@ -62,7 +62,6 @@ function checkAutoScroll() {
   const containerBottom = container.scrollTop + container.clientHeight;
   const contentBottom = container.scrollHeight;
 
-  // Автоскролл включён, если пользователь близко к низу (разница < 5px)
   isAutoScrollEnabled = Math.abs(contentBottom - containerBottom) < 5;
 }
 
@@ -132,8 +131,8 @@ function typewriterEffect(data) {
   const interval = setInterval(() => {
     if (i < message.length) {
       line.insertBefore(document.createTextNode(message[i]), cursor);
-      checkAutoScroll(); // Проверяем состояние прокрутки
-      scrollToBottomIfEnabled(); // Скроллим, если автоскролл активен
+      checkAutoScroll();
+      scrollToBottomIfEnabled();
       i++;
     } else {
       clearInterval(interval);
@@ -147,7 +146,10 @@ function typewriterEffect(data) {
 // Подключение к EventSource
 const es = new EventSource('/stream');
 es.onmessage = (e) => {
-  if (!e.data.startsWith(`[${userId}]`)) {
+  if (e.data === '[CLEAR]') {
+    output.innerHTML = '';
+    output.appendChild(inputLine);
+  } else if (!e.data.startsWith(`[${userId}]`)) {
     typewriterEffect(e.data);
   }
 };

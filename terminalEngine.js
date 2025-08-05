@@ -23,6 +23,10 @@ export function subscribeToMessages(send) {
   listeners.push(send);
 }
 
+export function getCurrentHistory() {
+  return history.map(m => `[${m.name}]: ${m.content}`);
+}
+
 function broadcast(msg) {
   listeners.forEach(f => f(msg));
 }
@@ -37,17 +41,9 @@ function buildContext() {
     const isAI = agents.some(a => a.name === m.name);
 
     if (isAI) {
-      // Сообщение от AI — просто контент, без имени
-      return {
-        role: 'assistant',
-        content: m.content
-      };
+      return { role: 'assistant', content: m.content };
     } else {
-      // Сообщение от пользователя или другого участника — с явным @
-      return {
-        role: 'user',
-        content: `@${m.name}: ${m.content}`
-      };
+      return { role: 'user', content: `@${m.name}: ${m.content}` };
     }
   });
 }
@@ -66,7 +62,7 @@ async function handleAIReply() {
   ];
 
   try {
-    const reply = await getChatCompletion(speaker.model, messages, history); // Передаём history
+    const reply = await getChatCompletion(speaker.model, messages, history);
     const content = reply.trim();
     history.push({ name: speaker.name, content });
     broadcast(`[${speaker.name}]: ${content}`);
@@ -81,12 +77,11 @@ async function handleAIReply() {
 
 async function handleUserQueue() {
   if (userQueue.length > 0) {
-    userQueue.shift(); // Message already in history
+    userQueue.shift();
   }
 }
 
 function shouldEndDialog() {
-  // End if too many messages or meme coin is created
   return history.length >= MAX_MESSAGES || 
          history.some(m => m.content.toLowerCase().includes("meme coin created"));
 }
@@ -102,7 +97,6 @@ async function endDialog() {
     memeCoin = await generateMemeCoin(history);
     if (memeCoin) {
       fileName = `dialog_${dialogId}_${dateStr}_${memeCoin.ticker}.txt`;
-      // Send the meme coin summary to the dialogue before ending
       broadcast(`🎉 [FINAL MEME COIN]:\n${formatMemeCoin(memeCoin)}`);
     }
   } else {
@@ -110,17 +104,19 @@ async function endDialog() {
 +-------------------------------------------+
 |          [DIALOG ENDED]                   |
 |          Dialog ended                     |
+|          New dialog starting soon         |
 |          ${now.toLocaleString()}          |
 +-------------------------------------------+
     `);
   }
 
-  // Save dialog to file
   const dialogContent = history.map(m => `[${m.name}]: ${m.content}`).join('\n');
   fs.mkdirSync(path.join(__dirname, 'dialogs'), { recursive: true });
   fs.writeFileSync(path.join(__dirname, 'dialogs', fileName), dialogContent);
 
-  // Reset for new dialog
+  await new Promise(resolve => setTimeout(resolve, 30000)); // 30 секунд задержка
+  broadcast('[CLEAR]');
+
   history = [];
   lastSpeaker = null;
 }
@@ -134,8 +130,8 @@ function progressBar(percentage) {
 
 function formatRatingLine(label, value) {
   const bar = progressBar(value);
-  const labelFormatted = label.padEnd(14); // выравнивание метки
-  const valueFormatted = String(value).padStart(3); // выравнивание процентов
+  const labelFormatted = label.padEnd(14);
+  const valueFormatted = String(value).padStart(3);
   return `| ${labelFormatted}${bar} ${valueFormatted}% |`;
 }
 
@@ -178,6 +174,6 @@ export async function runEngine() {
   while (true) {
     await handleUserQueue();
     await handleAIReply();
-    await new Promise(r => setTimeout(r, 20000)); // 20-second delay between replies
+    await new Promise(r => setTimeout(r, 20000));
   }
 }

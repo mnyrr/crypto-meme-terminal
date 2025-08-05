@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { runEngine, addUserMessage, subscribeToMessages } from './terminalEngine.js';
+import { runEngine, addUserMessage, subscribeToMessages, getCurrentHistory } from './terminalEngine.js';
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -37,7 +37,22 @@ app.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
-  subscribeToMessages(msg => res.write(`data: ${msg}\n\n`));
+
+  // Отправляем текущую историю при подключении
+  const currentHistory = getCurrentHistory();
+  currentHistory.forEach(msg => {
+    res.write(`data: ${msg}\n\n`);
+  });
+
+  // Подписываемся на новые сообщения
+  const sendMessage = (msg) => {
+    res.write(`data: ${msg}\n\n`);
+  };
+  subscribeToMessages(sendMessage);
+
+  req.on('close', () => {
+    res.end();
+  });
 });
 
 app.listen(process.env.PORT || 3000, () => {
