@@ -130,7 +130,7 @@ async function loadInitialHistory() {
     history.forEach(msg => {
       const line = document.createElement('div');
       line.textContent = msg;
-      output.appendChild(line);
+      output.appendChild(line); // Моментальная загрузка без эффекта
     });
     scrollToBottomIfEnabled();
   }
@@ -142,7 +142,7 @@ es.onmessage = (e) => {
     output.innerHTML = '';
     output.appendChild(inputLine);
   } else if (!e.data.startsWith(`[${userId}]`)) {
-    typewriterEffect(e.data);
+    typewriterEffect(e.data); // Эффект только для новых сообщений
   }
 };
 
