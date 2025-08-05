@@ -40,8 +40,9 @@ function isSelectingText() {
 }
 
 // Автофокус
-window.onload = () => {
+window.onload = async () => {
   if (!isSelectingText()) hiddenInput.focus();
+  await loadInitialHistory();
 };
 
 window.addEventListener('focus', () => {
@@ -141,6 +142,20 @@ function typewriterEffect(data) {
       scrollInputIntoView();
     }
   }, 30);
+}
+
+// Моментальная загрузка начальной истории
+async function loadInitialHistory() {
+  const response = await fetch('/initial-history');
+  if (response.ok) {
+    const history = await response.json();
+    history.forEach(msg => {
+      const line = document.createElement('div');
+      line.textContent = msg;
+      output.appendChild(line);
+    });
+    scrollToBottomIfEnabled();
+  }
 }
 
 // Подключение к EventSource
