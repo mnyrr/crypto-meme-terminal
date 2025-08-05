@@ -13,7 +13,6 @@ inputLine.className = 'input-line';
 inputLine.innerHTML = `
   <span class="prompt">[${userId}]: </span>
   <span class="input-text"><span class="cursor">▋</span></span>
-
 `;
 output.appendChild(inputLine);
 
@@ -29,7 +28,6 @@ function updateInputDisplay() {
   const inputText = document.querySelector('.input-text');
   const cursor = inputText.querySelector('.cursor');
 
-  // Удаляем всё, кроме курсора
   inputText.innerHTML = '';
   inputText.appendChild(document.createTextNode(hiddenInput.value));
   inputText.appendChild(cursor);
@@ -41,34 +39,42 @@ function isSelectingText() {
   return sel && sel.type === 'Range';
 }
 
-// Автофокус при загрузке
+// Автофокус
 window.onload = () => {
   if (!isSelectingText()) hiddenInput.focus();
 };
 
-// Автофокус при возвращении на вкладку
 window.addEventListener('focus', () => {
   setTimeout(() => {
     if (!isSelectingText()) hiddenInput.focus();
   }, 50);
 });
 
-// Автофокус при клике по терминалу
 document.querySelector('.output-container').addEventListener('click', () => {
   if (!isSelectingText()) hiddenInput.focus();
 });
 
-// Прокрутка к нижней части, если пользователь печатает и не скроллит вручную
-function scrollToInputIfNeeded() {
+// Управление автоскроллом
+let isAutoScrollEnabled = true;
+
+function checkAutoScroll() {
   const container = document.querySelector('.output-container');
   const containerBottom = container.scrollTop + container.clientHeight;
-  const inputBottom = inputLine.offsetTop + inputLine.offsetHeight;
+  const contentBottom = container.scrollHeight;
 
-  const atBottom = Math.abs(containerBottom - container.scrollHeight) < 5;
+  // Автоскролл включён, если пользователь близко к низу (разница < 5px)
+  isAutoScrollEnabled = Math.abs(contentBottom - containerBottom) < 5;
+}
 
-  if (inputBottom > containerBottom || atBottom) {
+function scrollToBottomIfEnabled() {
+  const container = document.querySelector('.output-container');
+  if (isAutoScrollEnabled) {
     container.scrollTop = container.scrollHeight;
   }
+}
+
+function scrollInputIntoView() {
+  inputLine.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // Отправка сообщения
@@ -89,13 +95,13 @@ function sendMessage() {
     body: JSON.stringify({ message: msg, sender: userId })
   });
 
-  scrollToInputIfNeeded();
+  scrollToBottomIfEnabled();
 }
 
 // Обработка ввода
 hiddenInput.addEventListener('input', () => {
   updateInputDisplay();
-  scrollToInputIfNeeded();
+  scrollToBottomIfEnabled();
 });
 
 hiddenInput.addEventListener('keydown', (e) => {
@@ -113,13 +119,10 @@ function typewriterEffect(data) {
   const name = namePart + "]";
   const message = messageParts.join("]: ");
 
-  // Скрываем input-line
   inputLine.style.display = 'none';
 
-  // Добавляем имя
   line.textContent = name + ": ";
 
-  // Курсор для эффекта
   const cursor = document.createElement("span");
   cursor.className = "typing-cursor";
   cursor.innerText = "▋";
@@ -129,14 +132,13 @@ function typewriterEffect(data) {
   const interval = setInterval(() => {
     if (i < message.length) {
       line.insertBefore(document.createTextNode(message[i]), cursor);
-      output.scrollTop = output.scrollHeight;
+      checkAutoScroll(); // Проверяем состояние прокрутки
+      scrollToBottomIfEnabled(); // Скроллим, если автоскролл активен
       i++;
     } else {
       clearInterval(interval);
       cursor.remove();
-
-      // Возвращаем input-line после окончания
-      inputLine.style.display = 'flex'; // flex для корректного отображения
+      inputLine.style.display = 'flex';
       scrollInputIntoView();
     }
   }, 30);
@@ -149,3 +151,8 @@ es.onmessage = (e) => {
     typewriterEffect(e.data);
   }
 };
+
+// Обработка прокрутки пользователем
+document.querySelector('.output-container').addEventListener('scroll', () => {
+  checkAutoScroll();
+});
