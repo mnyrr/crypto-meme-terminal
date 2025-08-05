@@ -30,9 +30,15 @@ function isSelectingText() {
   return sel && sel.type === 'Range';
 }
 
+function moveInputToEnd() {
+  output.appendChild(inputLine); // Перемещаем inputLine в конец
+  scrollInputIntoView();
+}
+
 window.onload = async () => {
   if (!isSelectingText()) hiddenInput.focus();
   await loadInitialHistory();
+  moveInputToEnd(); // Убеждаемся, что inputLine в конце при загрузке
 };
 
 window.addEventListener('focus', () => {
@@ -81,6 +87,7 @@ function sendMessage() {
   });
 
   scrollToBottomIfEnabled();
+  moveInputToEnd(); // Перемещаем inputLine после отправки
 }
 
 hiddenInput.addEventListener('input', () => {
@@ -118,7 +125,7 @@ function typewriterEffect(data) {
       clearInterval(interval);
       cursor.remove();
       inputLine.style.display = 'flex';
-      scrollInputIntoView();
+      moveInputToEnd(); // Перемещаем после эффекта
     }
   }, 30);
 }
@@ -130,9 +137,10 @@ async function loadInitialHistory() {
     history.forEach(msg => {
       const line = document.createElement('div');
       line.textContent = msg;
-      output.appendChild(line); // Моментальная загрузка без эффекта
+      output.appendChild(line);
     });
     scrollToBottomIfEnabled();
+    moveInputToEnd(); // Убеждаемся, что inputLine в конце
   }
 }
 
@@ -142,7 +150,7 @@ es.onmessage = (e) => {
     output.innerHTML = '';
     output.appendChild(inputLine);
   } else if (!e.data.startsWith(`[${userId}]`)) {
-    typewriterEffect(e.data); // Эффект только для новых сообщений
+    typewriterEffect(e.data);
   }
 };
 
