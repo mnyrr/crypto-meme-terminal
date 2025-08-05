@@ -31,14 +31,14 @@ function isSelectingText() {
 }
 
 function moveInputToEnd() {
-  output.appendChild(inputLine); // Перемещаем inputLine в конец
-  scrollInputIntoView();
+  output.appendChild(inputLine);
+  scrollToBottomIfEnabled();
 }
 
 window.onload = async () => {
   if (!isSelectingText()) hiddenInput.focus();
   await loadInitialHistory();
-  moveInputToEnd(); // Убеждаемся, что inputLine в конце при загрузке
+  moveInputToEnd();
 };
 
 window.addEventListener('focus', () => {
@@ -57,12 +57,15 @@ function checkAutoScroll() {
   const container = document.querySelector('.output-container');
   const containerBottom = container.scrollTop + container.clientHeight;
   const contentBottom = container.scrollHeight;
-  isAutoScrollEnabled = Math.abs(contentBottom - containerBottom) < 5;
+  isAutoScrollEnabled = Math.abs(contentBottom - containerBottom) < 5; // Включается только внизу
 }
 
 function scrollToBottomIfEnabled() {
   const container = document.querySelector('.output-container');
-  if (isAutoScrollEnabled) container.scrollTop = container.scrollHeight;
+  if (isAutoScrollEnabled) {
+    container.scrollTop = container.scrollHeight;
+    scrollInputIntoView();
+  }
 }
 
 function scrollInputIntoView() {
@@ -87,12 +90,13 @@ function sendMessage() {
   });
 
   scrollToBottomIfEnabled();
-  moveInputToEnd(); // Перемещаем inputLine после отправки
+  moveInputToEnd();
 }
 
 hiddenInput.addEventListener('input', () => {
   updateInputDisplay();
-  scrollToBottomIfEnabled();
+  scrollToBottomIfEnabled(); // Перемещаем вниз при начале набора
+  checkAutoScroll(); // Проверяем позицию скролла
 });
 
 hiddenInput.addEventListener('keydown', (e) => {
@@ -117,15 +121,18 @@ function typewriterEffect(data) {
   let i = 0;
   const interval = setInterval(() => {
     if (i < message.length) {
-      line.insertBefore(document.createTextNode(message[i]), cursor);
-      checkAutoScroll();
-      scrollToBottomIfEnabled();
+      const char = message[i];
+      line.insertBefore(document.createTextNode(char), cursor);
+      if (char === '\n' || i === message.length - 1) {
+        checkAutoScroll(); // Проверяем скролл после каждой строки или конца
+        scrollToBottomIfEnabled(); // Динамический скролл
+      }
       i++;
     } else {
       clearInterval(interval);
       cursor.remove();
       inputLine.style.display = 'flex';
-      moveInputToEnd(); // Перемещаем после эффекта
+      moveInputToEnd();
     }
   }, 30);
 }
@@ -140,7 +147,7 @@ async function loadInitialHistory() {
       output.appendChild(line);
     });
     scrollToBottomIfEnabled();
-    moveInputToEnd(); // Убеждаемся, что inputLine в конце
+    moveInputToEnd();
   }
 }
 
