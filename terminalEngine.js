@@ -47,7 +47,7 @@ function pickNextSpeaker() {
 }
 
 function buildContext() {
-  return history.slice(-4).map(m => { // Сократили до 4 сообщений
+  return history.slice(-4).map(m => {
     const isAI = agents.some(a => a.name === m.name);
     return isAI ? { role: 'assistant', content: m.content } : { role: 'user', content: `@${m.name}: ${m.content}` };
   });
@@ -60,8 +60,14 @@ async function handleAIReply() {
     ? "Start with a crypto-related idea or small ASCII art."
     : `Reply to ${history[history.length - 1].name}: "${history[history.length - 1].content}"`;
   
+  // Напоминание роли каждые 10 сообщений
+  let roleReminder = speaker.role;
+  if (messageCount > 0 && messageCount % 10 === 0) {
+    roleReminder += "\n[REMINDER] Stick to your role and focus on the task. Avoid emojis, use ASCII art.";
+  }
+
   const messages = [
-    { role: "system", content: speaker.role },
+    { role: "system", content: roleReminder },
     ...buildContext(),
     { role: "user", content: promptMsg }
   ];
@@ -90,7 +96,7 @@ async function handleUserQueue() {
 }
 
 function shouldEndDialog() {
-  const coinMentions = {};
+  const coinMentions = {}; // Объявляем объект
   history.forEach(m => {
     const coins = m.content.match(/\*\*[A-Z]+\*\*/g); // Ищем упоминания мем-коинов
     if (coins) {
