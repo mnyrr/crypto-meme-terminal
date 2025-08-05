@@ -66,7 +66,7 @@ async function handleAIReply() {
   ];
 
   try {
-    const reply = await getChatCompletion(speaker.model, messages);
+    const reply = await getChatCompletion(speaker.model, messages, history); // Передаём history
     const content = reply.trim();
     history.push({ name: speaker.name, content });
     broadcast(`[${speaker.name}]: ${content}`);
