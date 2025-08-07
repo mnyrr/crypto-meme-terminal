@@ -57,7 +57,7 @@ function checkAutoScroll() {
   const container = document.querySelector('.output-container');
   const containerBottom = container.scrollTop + container.clientHeight;
   const contentBottom = container.scrollHeight;
-  isAutoScrollEnabled = Math.abs(contentBottom - containerBottom) < 5; // Включается только внизу
+  isAutoScrollEnabled = Math.abs(contentBottom - containerBottom) < 5;
 }
 
 function scrollToBottomIfEnabled() {
@@ -95,8 +95,8 @@ function sendMessage() {
 
 hiddenInput.addEventListener('input', () => {
   updateInputDisplay();
-  scrollToBottomIfEnabled(); // Перемещаем вниз при начале набора
-  checkAutoScroll(); // Проверяем позицию скролла
+  scrollToBottomIfEnabled();
+  checkAutoScroll();
 });
 
 hiddenInput.addEventListener('keydown', (e) => {
@@ -124,8 +124,8 @@ function typewriterEffect(data) {
       const char = message[i];
       line.insertBefore(document.createTextNode(char), cursor);
       if (char === '\n' || i === message.length - 1) {
-        checkAutoScroll(); // Проверяем скролл после каждой строки или конца
-        scrollToBottomIfEnabled(); // Динамический скролл
+        checkAutoScroll();
+        scrollToBottomIfEnabled();
       }
       i++;
     } else {
@@ -151,13 +151,24 @@ async function loadInitialHistory() {
   }
 }
 
+function clearTerminalVisually() {
+  output.innerHTML = '';
+  output.appendChild(inputLine);
+  scrollToBottomIfEnabled();
+}
+
 const es = new EventSource('/stream');
 es.onmessage = (e) => {
-  if (e.data === '[CLEAR]') {
-    output.innerHTML = '';
-    output.appendChild(inputLine);
-  } else if (!e.data.startsWith(`[${userId}]`)) {
-    typewriterEffect(e.data);
+  const data = e.data;
+  if (data === '[CLEAR]') {
+    clearTerminalVisually();
+  } else if (data.startsWith(`[${userId}][SYSTEM]`)) {
+    const line = document.createElement('div');
+    line.textContent = data;
+    output.insertBefore(line, inputLine);
+    scrollToBottomIfEnabled();
+  } else if (!data.startsWith(`[${userId}]`)) {
+    typewriterEffect(data);
   }
 };
 

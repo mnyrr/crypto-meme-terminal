@@ -9,6 +9,7 @@ let lastSpeaker = null;
 let dialogCount = 0;
 const MAX_MESSAGES = 50; // Максимум 50 реплик
 let messageCount = 0; // Счётчик реплик
+let isEngineRunning = true; // Флаг для остановки общения
 
 const userQueue = [];
 const listeners = [];
@@ -54,13 +55,14 @@ function buildContext() {
 }
 
 async function handleAIReply() {
+  if (!isEngineRunning) return; // Проверяем, работает ли engine
+
   const speaker = pickNextSpeaker();
   lastSpeaker = speaker.name;
   const promptMsg = history.length === 0
     ? "Start with a crypto-related idea or small ASCII art."
     : `Reply to ${history[history.length - 1].name}: "${history[history.length - 1].content}"`;
   
-  // Напоминание роли каждые 10 сообщений
   let roleReminder = speaker.role;
   if (messageCount > 0 && messageCount % 10 === 0) {
     roleReminder += "\n[REMINDER] Stick to your role and focus on the task. Avoid emojis, use ASCII art.";
@@ -89,16 +91,16 @@ async function handleAIReply() {
 }
 
 async function handleUserQueue() {
-  if (userQueue.length > 0) {
+  if (userQueue.length > 0 && isEngineRunning) {
     userQueue.shift();
     console.log(`User queue processed - Remaining: ${userQueue.length}`);
   }
 }
 
 function shouldEndDialog() {
-  const coinMentions = {}; // Объявляем объект
+  const coinMentions = {};
   history.forEach(m => {
-    const coins = m.content.match(/\*\*[A-Z]+\*\*/g); // Ищем упоминания мем-коинов
+    const coins = m.content.match(/\*\*[A-Z]+\*\*/g);
     if (coins) {
       coins.forEach(coin => {
         coinMentions[coin] = (coinMentions[coin] || 0) + 1;
@@ -194,10 +196,28 @@ ${formatRatingLine('ATH M.Cap:', ratings.athMarketCap)}
   `;
 }
 
+// Экспортируем функции управления
+export function stopEngine() {
+  isEngineRunning = false;
+  console.log('[SYSTEM] Engine stopped');
+}
+
+export function startEngine() {
+  isEngineRunning = true;
+  console.log('[SYSTEM] Engine started');
+}
+
+export function clearContext() {
+  history = [];
+  lastSpeaker = null;
+  messageCount = 0;
+  console.log('[SYSTEM] Context cleared');
+}
+
 export async function runEngine() {
   while (true) {
     await handleUserQueue();
-    await handleAIReply();
+    if (isEngineRunning) await handleAIReply();
     await new Promise(r => setTimeout(r, 20000));
   }
 }

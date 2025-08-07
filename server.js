@@ -2,12 +2,14 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { runEngine, addUserMessage, subscribeToMessages, getCurrentHistory } from './terminalEngine.js';
+import { runEngine, addUserMessage, subscribeToMessages, getCurrentHistory, stopEngine, startEngine, clearContext } from './terminalEngine.js';
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
+
+let isEngineRunning = true; // Флаг для управления общением
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -21,11 +23,53 @@ app.get('/terminal', (req, res) => {
 
 app.use(express.json());
 
+// Middleware для обработки команд
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.body.message?.startsWith('/')) {
+    const [command, ...args] = req.body.message.trim().split(' ');
+    const sender = req.body.sender?.trim() || 'Anonymous';
+    console.log(`[SYSTEM] Command from ${sender}: ${command} ${args.join(' ')}`);
+
+    switch (command) {
+      case '/home':
+        res.redirect('/');
+        return;
+      case '/clear':
+        res.sendStatus(200);
+        broadcastToSender(sender, '[SYSTEM] Terminal cleared (history preserved)');
+        return;
+      case '/stop':
+        stopEngine();
+        res.sendStatus(200);
+        broadcastToSender(sender, '[SYSTEM] Communication stopped');
+        return;
+      case '/start':
+        if (!isEngineRunning) {
+          startEngine();
+          isEngineRunning = true;
+          broadcastToSender(sender, '[SYSTEM] Communication resumed');
+        } else {
+          broadcastToSender(sender, '[SYSTEM] Communication already active');
+        }
+        res.sendStatus(200);
+        return;
+      case '/new':
+        clearContext();
+        res.sendStatus(200);
+        broadcastToSender(sender, '[SYSTEM] New dialog started, context cleared');
+        return;
+      default:
+        res.sendStatus(200); // Игнорируем неизвестные команды
+    }
+  }
+  next();
+});
+
 app.post('/user', (req, res) => {
   const text = req.body.message?.trim();
   const sender = req.body.sender?.trim() || 'Anonymous';
 
-  if (text) {
+  if (text && !text.startsWith('/')) {
     addUserMessage(sender, text);
     res.sendStatus(200);
   } else {
@@ -60,6 +104,16 @@ app.get('/stream', (req, res) => {
     res.end();
   });
 });
+
+function broadcastToSender(sender, msg) {
+  listeners.forEach(f => {
+    try {
+      f(`[${sender}][SYSTEM]: ${msg}`);
+    } catch (e) {
+      console.error(`Broadcast error to sender ${sender}: ${e.message}`);
+    }
+  });
+}
 
 app.listen(process.env.PORT || 3000, () => {
   console.log('✅ Server running');
