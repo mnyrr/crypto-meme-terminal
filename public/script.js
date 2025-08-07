@@ -138,7 +138,7 @@ function typewriterEffect(data) {
 }
 
 async function loadInitialHistory() {
-  const response = await fetch('/initial-history');
+  const response = await fetch('/initial-history?sender=' + userId);
   if (response.ok) {
     const history = await response.json();
     history.forEach(msg => {
@@ -157,16 +157,13 @@ function clearTerminalVisually() {
   scrollToBottomIfEnabled();
 }
 
-const es = new EventSource('/stream');
+const es = new EventSource('/stream?sender=' + userId);
 es.onmessage = (e) => {
   const data = e.data;
   if (data === '[CLEAR]') {
     clearTerminalVisually();
   } else if (data.startsWith(`[${userId}][SYSTEM]`)) {
-    const line = document.createElement('div');
-    line.textContent = data;
-    output.insertBefore(line, inputLine);
-    scrollToBottomIfEnabled();
+    typewriterEffect(data); // Отображаем системные логи
   } else if (!data.startsWith(`[${userId}]`)) {
     typewriterEffect(data);
   }

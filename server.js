@@ -9,8 +9,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-let isEngineRunning = true; // Флаг для управления общением
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
@@ -22,6 +20,8 @@ app.get('/terminal', (req, res) => {
 });
 
 app.use(express.json());
+
+let listeners = []; // Глобальный массив подписчиков
 
 // Middleware для обработки команд
 app.use((req, res, next) => {
@@ -36,27 +36,28 @@ app.use((req, res, next) => {
         return;
       case '/clear':
         res.sendStatus(200);
-        broadcastToSender(sender, '[SYSTEM] Terminal cleared (history preserved)');
+        broadcastToSender(`[SYSTEM] Terminal cleared (history preserved)`);
         return;
       case '/stop':
         stopEngine();
         res.sendStatus(200);
-        broadcastToSender(sender, '[SYSTEM] Communication stopped');
+        broadcastToSender(`[SYSTEM] Communication stopped`);
         return;
       case '/start':
         if (!isEngineRunning) {
           startEngine();
           isEngineRunning = true;
-          broadcastToSender(sender, '[SYSTEM] Communication resumed');
+          broadcastToSender(`[SYSTEM] Communication resumed`);
         } else {
-          broadcastToSender(sender, '[SYSTEM] Communication already active');
+          broadcastToSender(`[SYSTEM] Communication already active`);
         }
         res.sendStatus(200);
         return;
       case '/new':
         clearContext();
+        startEngine(); // Запускаем заново после очистки
         res.sendStatus(200);
-        broadcastToSender(sender, '[SYSTEM] New dialog started, context cleared');
+        broadcastToSender(`[SYSTEM] New dialog started, context cleared`);
         return;
       default:
         res.sendStatus(200); // Игнорируем неизвестные команды
@@ -89,31 +90,41 @@ app.get('/stream', (req, res) => {
 
   const currentHistory = getCurrentHistory();
   currentHistory.forEach(msg => {
-    res.write(`data: ${msg}\n\n`);
+    if (!msg.startsWith(`[${req.query.sender}][SYSTEM]`)) {
+      res.write(`data: ${msg}\n\n`);
+    }
   });
 
   const sendMessage = (msg) => {
     if (res.writableEnded) return;
-    res.write(`data: ${msg}\n\n`);
+    if (!msg.startsWith(`[${req.query.sender}][SYSTEM]`)) {
+      res.write(`data: ${msg}\n\n`);
+    }
   };
-  subscribeToMessages(sendMessage);
+  // Проверка на дубликаты подписчиков
+  if (!listeners.some(l => l === sendMessage)) {
+    subscribeToMessages(sendMessage);
+  }
   console.log('Stream connected');
 
   req.on('close', () => {
     console.log('Stream disconnected');
+    listeners = listeners.filter(l => l !== sendMessage); // Очистка при отключении
     res.end();
   });
 });
 
-function broadcastToSender(sender, msg) {
+function broadcastToSender(msg) {
   listeners.forEach(f => {
     try {
-      f(`[${sender}][SYSTEM]: ${msg}`);
+      f(msg);
     } catch (e) {
-      console.error(`Broadcast error to sender ${sender}: ${e.message}`);
+      console.error(`Broadcast error: ${e.message}`);
     }
   });
 }
+
+let isEngineRunning = true;
 
 app.listen(process.env.PORT || 3000, () => {
   console.log('✅ Server running');

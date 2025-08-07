@@ -12,7 +12,7 @@ let messageCount = 0; // Счётчик реплик
 let isEngineRunning = true; // Флаг для остановки общения
 
 const userQueue = [];
-const listeners = [];
+let listeners = []; // Локальный массив подписчиков
 
 export function addUserMessage(sender, content) {
   const message = { name: sender, content };
@@ -24,8 +24,10 @@ export function addUserMessage(sender, content) {
 }
 
 export function subscribeToMessages(send) {
-  listeners.push(send);
-  console.log(`New listener subscribed - Total: ${listeners.length}`);
+  if (!listeners.includes(send)) {
+    listeners.push(send);
+    console.log(`New listener subscribed - Total: ${listeners.length}`);
+  }
 }
 
 export function getCurrentHistory() {
@@ -205,6 +207,7 @@ export function stopEngine() {
 export function startEngine() {
   isEngineRunning = true;
   console.log('[SYSTEM] Engine started');
+  runEngine(); // Запускаем заново
 }
 
 export function clearContext() {
