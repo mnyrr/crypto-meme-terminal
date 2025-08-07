@@ -25,31 +25,10 @@ function updateInputDisplay() {
   inputText.appendChild(cursor);
 }
 
-function isSelectingText() {
-  const sel = window.getSelection();
-  return sel && sel.type === 'Range';
-}
-
 function moveInputToEnd() {
   output.appendChild(inputLine);
   scrollToBottomIfEnabled();
 }
-
-window.onload = async () => {
-  if (!isSelectingText()) hiddenInput.focus();
-  await loadInitialHistory();
-  moveInputToEnd();
-};
-
-window.addEventListener('focus', () => {
-  setTimeout(() => {
-    if (!isSelectingText()) hiddenInput.focus();
-  }, 50);
-});
-
-document.querySelector('.output-container').addEventListener('click', () => {
-  if (!isSelectingText()) hiddenInput.focus();
-});
 
 let isAutoScrollEnabled = true;
 
@@ -64,12 +43,7 @@ function scrollToBottomIfEnabled() {
   const container = document.querySelector('.output-container');
   if (isAutoScrollEnabled) {
     container.scrollTop = container.scrollHeight;
-    scrollInputIntoView();
   }
-}
-
-function scrollInputIntoView() {
-  inputLine.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function sendMessage() {
@@ -96,7 +70,6 @@ function sendMessage() {
 hiddenInput.addEventListener('input', () => {
   updateInputDisplay();
   scrollToBottomIfEnabled();
-  checkAutoScroll();
 });
 
 hiddenInput.addEventListener('keydown', (e) => {
@@ -123,10 +96,7 @@ function typewriterEffect(data) {
     if (i < message.length) {
       const char = message[i];
       line.insertBefore(document.createTextNode(char), cursor);
-      if (char === '\n' || i === message.length - 1) {
-        checkAutoScroll();
-        scrollToBottomIfEnabled();
-      }
+      scrollToBottomIfEnabled(); // Прокрутка после каждого символа
       i++;
     } else {
       clearInterval(interval);
@@ -151,23 +121,24 @@ async function loadInitialHistory() {
   }
 }
 
-function clearTerminalVisually() {
-  const systemLines = Array.from(output.querySelectorAll('div')).filter(line =>
-    line.textContent.startsWith(`[${userId}][SYSTEM]`)
-  );
-  output.innerHTML = '';
-  systemLines.forEach(line => output.appendChild(line));
-  output.appendChild(inputLine);
-  scrollToBottomIfEnabled();
-}
-
 const es = new EventSource('/stream?sender=' + userId);
 es.onmessage = (e) => {
   const data = e.data;
-  if (data === '[CLEAR]') {
-    clearTerminalVisually();
-  } else if (data.startsWith(`[${userId}][SYSTEM]`)) {
-    typewriterEffect(data); // Отображаем системные логи
+  if (data === '[CLEAR_TERMINAL]') {
+    output.innerHTML = '';
+    output.appendChild(inputLine);
+    scrollToBottomIfEnabled();
+  } else if (data === '[NEW_DIALOG]') {
+    output.innerHTML = '';
+    output.appendChild(inputLine);
+    loadInitialHistory();
+  } else if (data === '[GO_HOME]') {
+    window.location.href = '/';
+  } else if (data.startsWith(`[SYSTEM]:`)) {
+    const line = document.createElement('div');
+    line.textContent = data;
+    output.insertBefore(line, inputLine);
+    scrollToBottomIfEnabled();
   } else if (!data.startsWith(`[${userId}]`)) {
     typewriterEffect(data);
   }
