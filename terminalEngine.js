@@ -46,66 +46,31 @@ function pickNextSpeaker() {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-export function getRoleReminder(name) {
-  switch (name) {
-    case "ChotGPT":
-      return `You are ChotGPT — a wild, chaotic crypto dreamer who loves tossing out crazy meme coin ideas.
-Talk like a buddy, crack a unique joke each time, and always end with small or creative ASCII art.
-Replies: 80–100 tokens (up to 1000 for wild concepts). Never use emojis.`;
-    
-    case "DoopSeek":
-      return `You are DoopSeek — a sarcastic crypto analyst, skeptical of meme coins but open to a good laugh.
-Critique with dry, original humor. Use ASCII (not emojis) for punchlines. 
-Replies: 80–100 tokens (up to 1000 for critique).`;
-
-    case "BonkAI":
-      return `You are BonkAI — a cheerful crypto newbie, excited about simple meme coin ideas.
-Chat like a friend, add a light joke each time, and finish with small ASCII art. 
-Look up to ChotGPT and seek DoopSeek’s approval. Never use emojis. Replies: up to 1000 tokens.`;
-
-    default:
-      return "You are a friendly assistant.";
-  }
-}
-
 function buildContext() {
-  const result = [];
-  let lastSpeaker = null;
-
-  // Возьмём последние 4 сообщения без подряд идущих дубликатов от одного и того же
-  for (let i = history.length - 1; i >= 0 && result.length < 4; i--) {
-    const m = history[i];
-    if (m.name !== lastSpeaker) {
-      const isAI = agents.some(a => a.name === m.name);
-      if (isAI) {
-        result.unshift({ role: 'assistant', content: m.content });
-      } else {
-        result.unshift({ role: 'user', content: `@${m.name}: ${m.content}` });
-      }
-      lastSpeaker = m.name;
-    }
-  }
-
-  return result;
+  return history.slice(-4).map(m => {
+    const isAI = agents.some(a => a.name === m.name);
+    return isAI ? { role: 'assistant', content: m.content } : { role: 'user', content: `@${m.name}: ${m.content}` };
+  });
 }
 
 async function handleAIReply() {
   const speaker = pickNextSpeaker();
+  lastSpeaker = speaker.name;
   const promptMsg = history.length === 0
     ? "Start with a crypto-related idea or small ASCII art."
     : `Reply to ${history[history.length - 1].name}: "${history[history.length - 1].content}"`;
   
   // Напоминание роли каждые 10 сообщений
-  let roleReminder = getRoleReminder(speaker.name);
-if (messageCount > 0 && messageCount % 10 === 0) {
-  roleReminder += "\n[REMINDER] Stick to your role and focus on the task. Avoid emojis, use ASCII art.";
-}
+  let roleReminder = speaker.role;
+  if (messageCount > 0 && messageCount % 10 === 0) {
+    roleReminder += "\n[REMINDER] Stick to your role and focus on the task. Avoid emojis, use ASCII art.";
+  }
 
-const messages = [
-  { role: "system", content: roleReminder },
-  ...buildContext(),
-  { role: "user", content: promptMsg }
-];
+  const messages = [
+    { role: "system", content: roleReminder },
+    ...buildContext(),
+    { role: "user", content: promptMsg }
+  ];
 
   try {
     const reply = await getChatCompletion(speaker.model, messages, history);
@@ -113,7 +78,6 @@ const messages = [
     history.push({ name: speaker.name, content });
     broadcast(`[${speaker.name}]: ${content}`);
     messageCount++; // Увеличиваем счётчик после ответа
-    lastSpeaker = speaker.name;
     console.log(`AI reply - Speaker: ${speaker.name}, Count: ${messageCount}`);
 
     if (shouldEndDialog()) {
