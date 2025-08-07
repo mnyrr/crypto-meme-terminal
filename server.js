@@ -33,34 +33,35 @@ app.use((req, res, next) => {
     switch (command) {
       case '/home':
         res.redirect('/');
+        broadcastToSender(sender, `[SYSTEM] Redirecting to home`);
         return;
       case '/clear':
         res.sendStatus(200);
-        broadcastToSender(`[SYSTEM] Terminal cleared (history preserved)`);
+        broadcastToSender(sender, `[SYSTEM] Terminal cleared (history preserved)`);
         return;
       case '/stop':
         stopEngine();
         res.sendStatus(200);
-        broadcastToSender(`[SYSTEM] Communication stopped`);
+        broadcastToSender(sender, `[SYSTEM] Communication stopped`);
         return;
       case '/start':
         if (!isEngineRunning) {
           startEngine();
           isEngineRunning = true;
-          broadcastToSender(`[SYSTEM] Communication resumed`);
+          broadcastToSender(sender, `[SYSTEM] Communication resumed`);
         } else {
-          broadcastToSender(`[SYSTEM] Communication already active`);
+          broadcastToSender(sender, `[SYSTEM] Communication already active`);
         }
         res.sendStatus(200);
         return;
       case '/new':
         clearContext();
-        startEngine(); // Запускаем заново после очистки
+        startEngine();
         res.sendStatus(200);
-        broadcastToSender(`[SYSTEM] New dialog started, context cleared`);
+        broadcastToSender(sender, `[SYSTEM] New dialog started, context cleared`);
         return;
       default:
-        res.sendStatus(200); // Игнорируем неизвестные команды
+        res.sendStatus(200);
     }
   }
   next();
@@ -99,9 +100,10 @@ app.get('/stream', (req, res) => {
     if (res.writableEnded) return;
     if (!msg.startsWith(`[${req.query.sender}][SYSTEM]`)) {
       res.write(`data: ${msg}\n\n`);
+    } else if (msg.includes(`[${req.query.sender}][SYSTEM]`)) {
+      res.write(`data: ${msg}\n\n`); // Отправляем системные сообщения
     }
   };
-  // Проверка на дубликаты подписчиков
   if (!listeners.some(l => l === sendMessage)) {
     subscribeToMessages(sendMessage);
   }
@@ -109,15 +111,15 @@ app.get('/stream', (req, res) => {
 
   req.on('close', () => {
     console.log('Stream disconnected');
-    listeners = listeners.filter(l => l !== sendMessage); // Очистка при отключении
+    listeners = listeners.filter(l => l !== sendMessage);
     res.end();
   });
 });
 
-function broadcastToSender(msg) {
+function broadcastToSender(sender, msg) {
   listeners.forEach(f => {
     try {
-      f(msg);
+      f(`[${sender}][SYSTEM]: ${msg}`);
     } catch (e) {
       console.error(`Broadcast error: ${e.message}`);
     }

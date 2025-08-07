@@ -87,10 +87,10 @@ function sendMessage() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: msg, sender: userId })
+  }).then(() => {
+    scrollToBottomIfEnabled();
+    moveInputToEnd();
   });
-
-  scrollToBottomIfEnabled();
-  moveInputToEnd();
 }
 
 hiddenInput.addEventListener('input', () => {
@@ -152,7 +152,11 @@ async function loadInitialHistory() {
 }
 
 function clearTerminalVisually() {
+  const systemLines = Array.from(output.querySelectorAll('div')).filter(line =>
+    line.textContent.startsWith(`[${userId}][SYSTEM]`)
+  );
   output.innerHTML = '';
+  systemLines.forEach(line => output.appendChild(line));
   output.appendChild(inputLine);
   scrollToBottomIfEnabled();
 }

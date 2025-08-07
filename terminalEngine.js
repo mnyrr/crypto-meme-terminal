@@ -7,19 +7,20 @@ import path from 'path';
 let history = [];
 let lastSpeaker = null;
 let dialogCount = 0;
-const MAX_MESSAGES = 50; // Максимум 50 реплик
-let messageCount = 0; // Счётчик реплик
-let isEngineRunning = true; // Флаг для остановки общения
+const MAX_MESSAGES = 50;
+let messageCount = 0;
+let isEngineRunning = true;
 
 const userQueue = [];
-let listeners = []; // Локальный массив подписчиков
+let listeners = [];
+let isProcessing = false; // Мьютекс для последовательности
 
 export function addUserMessage(sender, content) {
   const message = { name: sender, content };
   history.push(message);
   broadcast(`[${sender}]: ${content}`);
   userQueue.push(message);
-  messageCount++; // Увеличиваем счётчик
+  messageCount++;
   console.log(`Message added - Count: ${messageCount}`);
 }
 
@@ -39,7 +40,7 @@ function broadcast(msg) {
     try {
       f(msg);
     } catch (e) {
-      console.error(`Broadcast error to listener: ${e.message}`);
+      console.error(`Broadcast error: ${e.message}`);
     }
   });
 }
@@ -57,7 +58,8 @@ function buildContext() {
 }
 
 async function handleAIReply() {
-  if (!isEngineRunning) return; // Проверяем, работает ли engine
+  if (!isEngineRunning || isProcessing) return;
+  isProcessing = true;
 
   const speaker = pickNextSpeaker();
   lastSpeaker = speaker.name;
@@ -81,7 +83,7 @@ async function handleAIReply() {
     const content = reply.trim();
     history.push({ name: speaker.name, content });
     broadcast(`[${speaker.name}]: ${content}`);
-    messageCount++; // Увеличиваем счётчик после ответа
+    messageCount++;
     console.log(`AI reply - Speaker: ${speaker.name}, Count: ${messageCount}`);
 
     if (shouldEndDialog()) {
@@ -89,6 +91,8 @@ async function handleAIReply() {
     }
   } catch (err) {
     console.error(`⚠️ OpenRouter error: ${err.message}`);
+  } finally {
+    isProcessing = false;
   }
 }
 
@@ -152,7 +156,7 @@ ${formatMemeCoin(memeCoin)}
   broadcast('[CLEAR]');
   history = [];
   lastSpeaker = null;
-  messageCount = 0; // Сброс счётчика
+  messageCount = 0;
 }
 
 function progressBar(percentage) {
@@ -198,7 +202,6 @@ ${formatRatingLine('ATH M.Cap:', ratings.athMarketCap)}
   `;
 }
 
-// Экспортируем функции управления
 export function stopEngine() {
   isEngineRunning = false;
   console.log('[SYSTEM] Engine stopped');
@@ -220,7 +223,7 @@ export function clearContext() {
 export async function runEngine() {
   while (true) {
     await handleUserQueue();
-    if (isEngineRunning) await handleAIReply();
+    if (isEngineRunning && !isProcessing) await handleAIReply();
     await new Promise(r => setTimeout(r, 20000));
   }
 }
