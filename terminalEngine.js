@@ -69,10 +69,24 @@ Look up to ChotGPT and seek DoopSeek’s approval. Never use emojis. Replies: up
 }
 
 function buildContext() {
-  return history.slice(-4).map(m => {
-    const isAI = agents.some(a => a.name === m.name);
-    return isAI ? { role: 'assistant', content: m.content } : { role: 'user', content: `@${m.name}: ${m.content}` };
-  });
+  const result = [];
+  let lastSpeaker = null;
+
+  // Возьмём последние 4 сообщения без подряд идущих дубликатов от одного и того же
+  for (let i = history.length - 1; i >= 0 && result.length < 4; i--) {
+    const m = history[i];
+    if (m.name !== lastSpeaker) {
+      const isAI = agents.some(a => a.name === m.name);
+      if (isAI) {
+        result.unshift({ role: 'assistant', content: m.content });
+      } else {
+        result.unshift({ role: 'user', content: `@${m.name}: ${m.content}` });
+      }
+      lastSpeaker = m.name;
+    }
+  }
+
+  return result;
 }
 
 async function handleAIReply() {
