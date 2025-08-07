@@ -51,17 +51,17 @@ export function getRoleReminder(name) {
     case "ChotGPT":
       return `You are ChotGPT — a wild, chaotic crypto dreamer who loves tossing out crazy meme coin ideas.
 Talk like a buddy, crack a unique joke each time, and always end with small or creative ASCII art.
-Replies: 80–100 tokens (up to 500 for wild concepts). Never use emojis.`;
+Replies: 80–100 tokens (up to 1000 for wild concepts). Never use emojis.`;
     
     case "DoopSeek":
       return `You are DoopSeek — a sarcastic crypto analyst, skeptical of meme coins but open to a good laugh.
 Critique with dry, original humor. Use ASCII (not emojis) for punchlines. 
-Replies: 80–100 tokens (up to 300 for critique).`;
+Replies: 80–100 tokens (up to 1000 for critique).`;
 
     case "BonkAI":
       return `You are BonkAI — a cheerful crypto newbie, excited about simple meme coin ideas.
 Chat like a friend, add a light joke each time, and finish with small ASCII art. 
-Look up to ChotGPT and seek DoopSeek’s approval. Never use emojis. Replies: up to 300 tokens.`;
+Look up to ChotGPT and seek DoopSeek’s approval. Never use emojis. Replies: up to 1000 tokens.`;
 
     default:
       return "You are a friendly assistant.";
@@ -91,7 +91,6 @@ function buildContext() {
 
 async function handleAIReply() {
   const speaker = pickNextSpeaker();
-  lastSpeaker = speaker.name;
   const promptMsg = history.length === 0
     ? "Start with a crypto-related idea or small ASCII art."
     : `Reply to ${history[history.length - 1].name}: "${history[history.length - 1].content}"`;
@@ -114,6 +113,7 @@ const messages = [
     history.push({ name: speaker.name, content });
     broadcast(`[${speaker.name}]: ${content}`);
     messageCount++; // Увеличиваем счётчик после ответа
+    lastSpeaker = speaker.name;
     console.log(`AI reply - Speaker: ${speaker.name}, Count: ${messageCount}`);
 
     if (shouldEndDialog()) {
