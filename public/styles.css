@@ -28,8 +28,8 @@ body {
 /* Рамка терминала */
 .frame {
   box-shadow:
-    inset 0 0 8rem rgba(0, 0, 0, 0.3),
-    0 0 5rem rgba(0, 0, 0, 0.5);
+    inset 0 0 8rem rgba(0, 0, 0, 0.3), /* Уменьшили радиус и прозрачность */
+    0 0 5rem rgba(0, 0, 0, 0.5); /* Убрали лишний слой, смягчили */
   height: 100%;
   position: absolute;
   top: 0;
@@ -59,8 +59,7 @@ body {
   min-height: 0%;
   display: flex;
   flex-direction: column;
-  font-family: "Share Tech Mono", monospace;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1;
   white-space: pre-wrap;
   text-shadow: 0 0 5px rgba(212, 144, 27, .8);
@@ -186,6 +185,7 @@ a:hover {
 .back-button {
   position: absolute;
   top: 2.5rem;
+  /* padding: 0rem 0.9rem; */
 }
 
 .scanlines {
@@ -206,3 +206,24 @@ a:hover {
   z-index: 0;
   opacity: 0.9;
 }
+
+/* .glow {
+  background:
+    radial-gradient(circle at center,
+    rgb(212, 144, 27) 0%,
+    rgba(212, 144, 27,0.88) 58%,
+    rgba(212, 144, 27,0.57) 80%,
+    rgba(212, 144, 27,0.27) 93%,
+    rgba(212, 144, 27,0) 100%);
+  filter: blur(10rem) opacity(0.2);
+  opacity: 0.15;
+  pointer-events: none; 
+  position: fixed;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 11;
+} */
