@@ -167,7 +167,10 @@ es.onmessage = (e) => {
   if (data === '[CLEAR]') {
     clearTerminalVisually();
   } else if (data.startsWith(`[${userId}][SYSTEM]`)) {
-    typewriterEffect(data); // Отображаем системные логи
+    const line = document.createElement('div');
+    line.textContent = data;
+    output.insertBefore(line, inputLine);
+    scrollToBottomIfEnabled();
   } else if (!data.startsWith(`[${userId}]`)) {
     typewriterEffect(data);
   }

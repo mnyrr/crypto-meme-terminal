@@ -13,7 +13,7 @@ let isEngineRunning = true;
 
 const userQueue = [];
 let listeners = [];
-let isProcessing = false;
+let isProcessing = false; // Мьютекс для последовательности
 
 export function addUserMessage(sender, content) {
   const message = { name: sender, content };
@@ -110,6 +110,7 @@ function shouldEndDialog() {
     if (coins) {
       coins.forEach(coin => {
         coinMentions[coin] = (coinMentions[coin] || 0) + 1;
+        if (coinMentions[coin] >= 3) return true;
       });
     }
   });
@@ -123,11 +124,6 @@ async function endDialog() {
   let fileName = `dialog_${dialogId}_${dateStr}.txt`;
   let memeCoin = null;
 
-  const coinMentions = {};
-  history.forEach(m => {
-    const coins = m.content.match(/\*\*[A-Z]+\*\*/g);
-    if (coins) coins.forEach(coin => coinMentions[coin] = (coinMentions[coin] || 0) + 1);
-  });
   const lastCoin = Object.keys(coinMentions).find(coin => coinMentions[coin] >= 3) || '';
   if (lastCoin) {
     memeCoin = await generateMemeCoin(history);
@@ -212,9 +208,11 @@ export function stopEngine() {
 }
 
 export function startEngine() {
-  isEngineRunning = true;
-  console.log('[SYSTEM] Engine started');
-  runEngine();
+  if (!isEngineRunning) {
+    isEngineRunning = true;
+    console.log('[SYSTEM] Engine started');
+    runEngine(); // Запускаем цикл заново
+  }
 }
 
 export function clearContext() {
@@ -225,7 +223,7 @@ export function clearContext() {
 }
 
 export async function runEngine() {
-  while (true) {
+  while (isEngineRunning) {
     await handleUserQueue();
     if (isEngineRunning && !isProcessing) await handleAIReply();
     await new Promise(r => setTimeout(r, 20000));

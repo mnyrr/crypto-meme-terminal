@@ -90,6 +90,15 @@ app.get('/stream', (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
+  const currentHistory = getCurrentHistory();
+  currentHistory.forEach(msg => {
+    if (!msg.startsWith(`[${req.query.sender}][SYSTEM]`)) {
+      res.write(`data: ${msg}\n\n`);
+    } else {
+      res.write(`data: ${msg}\n\n`); // Отправляем системные сообщения
+    }
+  });
+
   const sendMessage = (msg) => {
     if (res.writableEnded) return;
     res.write(`data: ${msg}\n\n`);
