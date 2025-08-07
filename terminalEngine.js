@@ -46,6 +46,28 @@ function pickNextSpeaker() {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
+export function getRoleReminder(name) {
+  switch (name) {
+    case "ChotGPT":
+      return `You are ChotGPT — a wild, chaotic crypto dreamer who loves tossing out crazy meme coin ideas.
+Talk like a buddy, crack a unique joke each time, and always end with small or creative ASCII art.
+Replies: 80–100 tokens (up to 500 for wild concepts). Never use emojis.`;
+    
+    case "DoopSeek":
+      return `You are DoopSeek — a sarcastic crypto analyst, skeptical of meme coins but open to a good laugh.
+Critique with dry, original humor. Use ASCII (not emojis) for punchlines. 
+Replies: 80–100 tokens (up to 300 for critique).`;
+
+    case "BonkAI":
+      return `You are BonkAI — a cheerful crypto newbie, excited about simple meme coin ideas.
+Chat like a friend, add a light joke each time, and finish with small ASCII art. 
+Look up to ChotGPT and seek DoopSeek’s approval. Never use emojis. Replies: up to 300 tokens.`;
+
+    default:
+      return "You are a friendly assistant.";
+  }
+}
+
 function buildContext() {
   return history.slice(-4).map(m => {
     const isAI = agents.some(a => a.name === m.name);
@@ -61,16 +83,16 @@ async function handleAIReply() {
     : `Reply to ${history[history.length - 1].name}: "${history[history.length - 1].content}"`;
   
   // Напоминание роли каждые 10 сообщений
-  let roleReminder = speaker.role;
-  if (messageCount > 0 && messageCount % 10 === 0) {
-    roleReminder += "\n[REMINDER] Stick to your role and focus on the task. Avoid emojis, use ASCII art.";
-  }
+  let roleReminder = getRoleReminder(speaker.name);
+if (messageCount > 0 && messageCount % 10 === 0) {
+  roleReminder += "\n[REMINDER] Stick to your role and focus on the task. Avoid emojis, use ASCII art.";
+}
 
-  const messages = [
-    { role: "system", content: roleReminder },
-    ...buildContext(),
-    { role: "user", content: promptMsg }
-  ];
+const messages = [
+  { role: "system", content: roleReminder },
+  ...buildContext(),
+  { role: "user", content: promptMsg }
+];
 
   try {
     const reply = await getChatCompletion(speaker.model, messages, history);
