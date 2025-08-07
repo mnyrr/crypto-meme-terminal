@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { runEngine, addUserMessage, subscribeToMessages, getCurrentHistory, stopEngine, startEngine, clearContext, broadcast } from './terminalEngine.js';
+import { runEngine, addUserMessage, subscribeToMessages, getCurrentHistory, stopEngine, startEngine, clearContext } from './terminalEngine.js';
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +21,9 @@ app.get('/terminal', (req, res) => {
 
 app.use(express.json());
 
-// Обработка команд
+let listeners = []; // Глобальный массив подписчиков
+
+// Middleware для обработки команд
 app.use((req, res, next) => {
   if (req.method === 'POST' && req.body.message?.startsWith('/')) {
     const [command, ...args] = req.body.message.trim().split(' ');
@@ -30,27 +32,25 @@ app.use((req, res, next) => {
 
     switch (command) {
       case '/home':
-        res.sendStatus(200);
-        broadcast('[GO_HOME]', sender);
-        broadcast(`[SYSTEM]: Redirecting to home`, sender);
+        res.redirect('/');
+        broadcastToSender(sender, `[SYSTEM] Redirecting to home`);
         return;
       case '/clear':
         res.sendStatus(200);
-        broadcast('[CLEAR_TERMINAL]', sender);
-        broadcast(`[SYSTEM]: Terminal cleared (history preserved)`, sender);
+        broadcastToSender(sender, `[SYSTEM] Terminal cleared (history preserved)`);
         return;
       case '/stop':
         stopEngine();
         res.sendStatus(200);
-        broadcast(`[SYSTEM]: Communication stopped`, sender);
+        broadcastToSender(sender, `[SYSTEM] Communication stopped`);
         return;
       case '/start':
         if (!isEngineRunning) {
           startEngine();
           isEngineRunning = true;
-          broadcast(`[SYSTEM]: Communication resumed`, sender);
+          broadcastToSender(sender, `[SYSTEM] Communication resumed`);
         } else {
-          broadcast(`[SYSTEM]: Communication already active`, sender);
+          broadcastToSender(sender, `[SYSTEM] Communication already active`);
         }
         res.sendStatus(200);
         return;
@@ -58,8 +58,7 @@ app.use((req, res, next) => {
         clearContext();
         startEngine();
         res.sendStatus(200);
-        broadcast('[NEW_DIALOG]', sender);
-        broadcast(`[SYSTEM]: New dialog started, context cleared`, sender);
+        broadcastToSender(sender, `[SYSTEM] New dialog started, context cleared`);
         return;
       default:
         res.sendStatus(200);
@@ -81,16 +80,12 @@ app.post('/user', (req, res) => {
 });
 
 app.get('/initial-history', (req, res) => {
-  const currentHistory = getCurrentHistory();
+  const userId = req.query.sender;
+  const currentHistory = getCurrentHistory().filter(msg => msg.startsWith(`[${userId}]`) || msg.startsWith('[SYSTEM]:'));
   res.json(currentHistory);
 });
 
 app.get('/stream', (req, res) => {
-  const userId = req.query.sender;
-  if (!userId) {
-    res.sendStatus(400);
-    return;
-  }
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -99,21 +94,27 @@ app.get('/stream', (req, res) => {
     if (res.writableEnded) return;
     res.write(`data: ${msg}\n\n`);
   };
-  subscribeToMessages(userId, sendMessage);
-
-  const currentHistory = getCurrentHistory();
-  currentHistory.forEach(msg => {
-    if (!msg.startsWith(`[${userId}][SYSTEM]`)) {
-      res.write(`data: ${msg}\n\n`);
-    }
-  });
+  if (!listeners.some(l => l === sendMessage)) {
+    subscribeToMessages(sendMessage);
+  }
+  console.log('Stream connected');
 
   req.on('close', () => {
-    console.log(`Stream disconnected for ${userId}`);
-    listeners = listeners.filter(l => l.send !== sendMessage);
+    console.log('Stream disconnected');
+    listeners = listeners.filter(l => l !== sendMessage);
     res.end();
   });
 });
+
+function broadcastToSender(sender, msg) {
+  listeners.forEach(f => {
+    try {
+      f(`[${sender}][SYSTEM]: ${msg}`);
+    } catch (e) {
+      console.error(`Broadcast error: ${e.message}`);
+    }
+  });
+}
 
 let isEngineRunning = true;
 
